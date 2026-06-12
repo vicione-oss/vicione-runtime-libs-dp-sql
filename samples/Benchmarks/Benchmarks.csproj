@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MySql\MySql.csproj" />
+    <ProjectReference Include="..\..\src\PostgreSql\PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\Sqlite\Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\SqlServer\SqlServer.csproj" />
+  </ItemGroup>
+
+</Project>

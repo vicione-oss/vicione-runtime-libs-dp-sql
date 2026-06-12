@@ -1,0 +1,346 @@
+Common:
+  Target       : DataPort                                                                          # required: Id String to identify the target of the file
+  ContentType  : Rules                                                                             # required: Id String to identify the content of the file
+  Version      : 0.32.0                                                                            # required: Version of the file
+  Date         : 2026-05-11                                                                        # required: Date of the file
+  Description  : "MariaDB DataPort"                                                                # required: Description of the file
+  Author       : "ifm software gmbh"                                                               # required: Author of the file
+  MetadataType : YAML                                                                              # required: Metadata type of the file (YAML, JSON, XML, Text, Binary, ...)
+  Namespace    : "ViciOne.DataPort.MariaDb"                                                        # required: Namespace of the DataPort
+
+Root:
+  Id                       : "MariaDbDataPort"                                                     # required: Id String to identify the root of the DataPort
+  Name                     : "MariaDB"                                                             # required: display name of the DataPort
+  Description              : "DataPort for MariaDB"                                                # required: display description of the DataPort
+  Icon                     : mariadb                                                               # required: just one Icon for the DataPort
+  ChildNodes               :
+    - Id                   : MariaDb-Database
+      MaxDepth             : 64
+      MaxInstances         : 8
+
+Nodes:
+
+  # -------------------- Database -----------------------------------------
+
+  - Id                     : MariaDb-Database
+    Type                   : DataPortNode
+    Name                   : "Database"
+    Description            : "Database"
+    MetadataLength         : 0
+    Icon                   : database
+    TransferDirections     : [ Outbound ]
+    ChildNodes             :
+      - Id                 : Schema
+    PropertyCategories     :
+      - Id                 : Connection
+        Properties         :
+          - Id             : Server
+            Required       : true
+          - Id             : Port
+            Required       : true
+          - Id             : Database
+            Required       : true
+          - Id             : ConnectTimeout
+      - Id                 : Authentication
+        Properties         :
+          - Id             : UserId
+          - Id             : Password
+      - Id                 : Other
+        Properties         :
+          - Id             : BulkSize
+          - Id             : MinimumPublishIntervalInMs
+          - Id             : DisableStructureValidation
+
+  # -------------------- Schema -----------------------------------------
+
+  - Id                     : Schema
+    MappingId              : Schema
+    Type                   : DataPortTreeNode
+    Name                   : "Schema"
+    Description            : "Database schema"
+    Icon                   : schema
+    TransferModes          : [ None, OnChange, Periodic ]
+    ChildNodes             :
+      - Id                 : Table
+
+  # -------------------- Table ------------------------------------------
+
+  - Id                     : Table
+    MappingId              : Table
+    Type                   : DataPortTreeNode
+    Name                   : "Table"
+    Description            : "Table in the database"
+    Icon                   : table
+    TransferModes          : [ OnChange, Periodic, None ]
+    ChildNodes             :
+      - Id                 : ColumnBool
+      - Id                 : ColumnInteger
+      - Id                 : ColumnFloat
+      - Id                 : ColumnDateTime
+      - Id                 : ColumnString
+      - Id                 : ColumnBinary
+      - Id                 : ColumnJSON
+
+  # -------------------- Columns --------------------------------------
+
+  - Id                     : ColumnBool
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Bool Column"
+    Description            : "Boolean column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Bool ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+
+  - Id                     : ColumnInteger
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Integer Column"
+    Description            : "Integer column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+          - Id             : AutoIncrement
+
+  - Id                     : ColumnFloat
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Float Column"
+    Description            : "Float column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Float64, Float32 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnDateTime
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "DateTime Column"
+    Description            : "DateTime column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ DateTime ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnString
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "String Column"
+    Description            : "String column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ String ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnBinary
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Binary Column"
+    Description            : "Binary column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Binary ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnJSON
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "JSON Column"
+    Description            : "JSON column in the database table"
+    Icon                   : folder
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+    ChildNodes             :
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+  - Id: JsonBool
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Bool Property"
+    Description: "Boolean value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Bool ]
+
+  - Id: JsonInteger
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Integer Property"
+    Description: "Integer value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+
+  - Id: JsonFloat
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Float Property"
+    Description: "Float value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Float64, Float32 ]
+
+  - Id: JsonDateTime
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "DateTime Property"
+    Description: "DateTime value in the json structure"
+    Icon: datapoint
+    DataTypes: [ DateTime ]
+
+  - Id: JsonString
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "String Property"
+    Description: "String value in the json structure"
+    Icon: datapoint
+    DataTypes: [ String ]
+
+  - Id: JsonObject
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Json Object"
+    Description: "Json object in the json structure"
+    Icon: folder
+    ChildNodes:
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+DataTypes:
+
+  - Name        : StringLength32
+    Type        : String
+    Description : "String with a maximum of 32 characters"
+    MaxLength   : 32
+
+PropertyCategories:
+  - Id          : Connection
+    Name        : "Connection"
+    Description : "Connection properties"
+
+  - Id          : Authentication
+    Name        : "Authentication"
+    Description : "Authentication properties"
+
+  - Id          : Other
+    Name        : "Other"
+    Description : "Other properties"
+
+Properties:
+  - Id          : Server
+    Name        : "Server address"
+    Description : "The address of the database server"
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : Port
+    Name        : "Port"
+    Description : "The port of the database server"
+    DataType    : UInt16
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 3306
+
+  - Id          : Database
+    Name        : "Database"
+    Description : "The name of the database"
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : UserId
+    Name        : "User name"
+    Description : "The user name"
+    DataType    : StringLength32
+    UiControl   : TextBox
+
+  - Id          : Password
+    Name        : "Password"
+    Description : "The password"
+    DataType    : String
+    UiControl   : PasswordBox
+
+  - Id          : BulkSize
+    Name        : "Bulk size"
+    Description : "The number of rows to be transferred in one bulk."
+    DataType    : Int32
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 10000
+
+  - Id          : MinimumPublishIntervalInMs
+    Name        : "Minimum publish interval"
+    Description : "The minimum time interval between two data transfers in milliseconds."
+    DataType    : UInt32
+    UiControl   : NumericUpDown
+    MinValue    : 100
+    DefaultValue: 1000
+
+  - Id          : ConnectTimeout
+    Name        : "Connect timeout"
+    Description : "The time in seconds to wait for a connection to open. Increase this value when connecting to slow or remote servers."
+    DataType    : Int32
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 30
+
+  - Id          : DisableStructureValidation
+    Name        : "Disable structure validation"
+    Description : "Skips automatic schema/table validation and creation. Only use with pre-validated or trusted node names."
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : PrimaryKey
+    Name        : "Primary key"
+    Description : "States if the column is a primary key"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : NotNull
+    Name        : "Not null"
+    Description : "States if the column is not allowed to be null"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : AutoIncrement
+    Name        : "Auto increment"
+    Description : "States if the column can auto increment"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+Icons:
+
+  - Id          : mariadb
+    Content     : PHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+Cjx0aXRsZT5kYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9tYXJpYS1kYi9zb2xpZDwvdGl0bGU+CjxnIGlkPSJkYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9tYXJpYS1kYi9zb2xpZCIgc3Ryb2tlPSJub25lIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgo8cGF0aCBkPSJNMTYuNDU4NzQxNSwyNC44NDI4MzY1IEMxNy40NzEwNzM0LDI0Ljk3NTgwNTIgMTguOTc4MTU5MSwyNC41NDA5MTc4IDE5Ljg2OTUxNTksMjMuODQ4NjM3MiBDMjAuMzAwNDkzMiwyMy41MTM5MTQ2IDIwLjYxNzk3NTQsMjIuMDE1NDEwMSAyMS45OTQzNzIsMjEuNjQwOTAzMiBDMjQuMzAwMDQ2MywyMC4yNzY3ODI2IDI1Ljc4MTgzOTMsMTQuOTA3MjQ2NSAyNS43ODE4MzkzLDEzLjI2NzYyNjcgQzI1Ljc4MTgzOTMsMTEuNjI4MDA2OSAyNi44NzI5NDY4LDExLjQxMjQ2NzkgMjcuMTc4OTEyOCwxMS4xNjc5OTEyIEMyNy40ODQ4Nzg4LDEwLjkyMzUxNDUgMjksOS4xNjk0ODY4MyAyOSw4LjE4MTI0NzgyIEMyOSw3LjE5MzAwODgxIDI4LjY4Mjk2NjIsNi43MDk4MDUyMiAyNy43NzkyMzQ2LDcuMTgzMjYwNDQgQzI2Ljg3NTUwMyw3LjY1NjcxNTY2IDI2LjM2OTM1NTQsNy42NTczNTc5OSAyNS44NzE0ODUxLDcuNjEyOTkwNTYgQzI1LjM3MzYxNDksNy41Njg2MjMxMiAyMi42Mzg3NTc5LDguMzEwMzU3ODYgMjEuOTk0MzcyLDEwLjAyNDczMzcgQzIxLjM0OTk4NjIsMTEuNzM5MTA5NiAyMC43MjAwMTExLDEyLjg3MzA5NzEgMTkuMzMyMzgzNiwxNC4xNTIyODA1IEMxNy45MDcxMjIzLDE0Ljk5Mzg5NDMgMTYuMTAzMjU0LDE2LjI3OTU0MTMgMTMuODkyMjI4NywxNi42OTUwMzgyIEMxMi42NDQ4NTEzLDE2LjY5NTAzODIgOS42ODQ4MDkxOCwxNy43NjQyOTc4IDguMjQ0MjEzMDgsMjAuNTI3OTkzOSBDNy45MzU3NjQyOCwyMS4yNzk1MDUzIDcuNDgyMDE1MywyMC41MDczNDgzIDYuMTkzNjY4NjEsMjAuMzU0MzExNiBDNC42NDMzMjM1NiwyMC4yNDUwMjAyIDIuNzI4MDc3MjcsMjAuOTg0MDUwOCAzLjAzMjEyNjM0LDIxLjY0MDkwMzIgQzMuNjU2NDcyMjgsMjIuMTcxMTg1MiA0LjY0MzMyMzU2LDIyLjY4MzEyNjcgNC4zNDc0NjM5MiwyMi45MDM2NzMgQzMuNTAxNDIwNDEsMjMuMjc4MjEzMiAzLjAyNTg4MTY2LDI0LjI3NjM4MzkgMy4zMTgxMzI2NSwyNC44NDI4MzY1IEM0LjUyMzQyNTEsMjUuMjIxMjQxNSA2LjEwNTExOTYsMjQuODcwNzg2IDcuMTU4NDAyMTUsMjQuMjc2MzgzOSBDOC4yMTE2ODQ3LDIzLjY4MTk4MTggOS4xNDM3OTM4LDIyLjkwNTI2MTIgMTAuNTU2OTY0NywyMi4yNzUxMzk1IEMxMS43MjQ3MTk3LDIxLjg2Njc1MjEgMTUuNjY2OTE2MiwyMS42NDA5MDMyIDE2Ljk5MTY5MDIsMjIuMDA3ODMwNSBDMTcuNTc1NzI3NSwyMi4yMzE0OTEgMTYuOTA5NDM5LDIzLjAxMzYzNDUgMTYuNDU4NzQxNSwyMy40NjgyNDg3IEMxNi4wMDgwNDQxLDIzLjkyMjg2MyAxNS40NDY0MDk3LDI0LjcwOTg2NzggMTYuNDU4NzQxNSwyNC44NDI4MzY1IFoiIGlkPSJJY29uIiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD4KPC9nPgo8L3N2Zz4=
+    ContentType : Base64

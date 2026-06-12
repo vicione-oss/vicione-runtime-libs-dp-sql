@@ -1,0 +1,339 @@
+Common:
+  Target       : DataPort                                                                          # required: Id String to identify the target of the file
+  ContentType  : Rules                                                                             # required: Id String to identify the content of the file
+  Version      : 0.32.0                                                                            # required: Version of the file
+  Date         : 2026-05-11                                                                        # required: Date of the file
+  Description  : "Postgres DataPort"                                                               # required: Description of the file
+  Author       : "ifm software gmbh"                                                               # required: Author of the file
+  MetadataType : YAML                                                                              # required: Metadata type of the file (YAML, JSON, XML, Text, Binary, ...)
+  Namespace    : "ViciOne.DataPort.PostgreSql"                                                     # required: Namespace of the DataPort
+
+Root:
+  Id                       : "PostgreSqlDataPort"                                                  # required: Id String to identify the root of the DataPort
+  Name                     : "PostgreSQL"                                                          # required: display name of the DataPort
+  Description              : "DataPort for PostgreSQL database"                                    # required: display description of the DataPort
+  Icon                     : postgresql                                                            # required: just one Icon for the DataPort
+  ChildNodes               :
+    - Id                   : PostgreSql-Database
+      MaxDepth             : 64
+      MaxInstances         : 8
+
+Nodes:
+
+  # -------------------- Database -----------------------------------------
+
+  - Id                     : PostgreSql-Database
+    Type                   : DataPortNode
+    Name                   : "Database"
+    Description            : "Database"
+    MetadataLength         : 0
+    Icon                   : database
+    TransferDirections     : [ Outbound ]
+    ChildNodes             :
+      - Id                 : Schema
+    PropertyCategories     :
+      - Id                 : Connection
+        Properties         :
+          - Id             : Host
+            Required       : true
+          - Id             : Port
+            Required       : true
+          - Id             : Database
+          - Id             : ConnectTimeout
+      - Id                 : Authentication
+        Properties         :
+          - Id             : UserId
+          - Id             : Password
+      - Id                 : Other
+        Properties         :
+          - Id             : BulkSize
+          - Id             : MinimumPublishIntervalInMs
+          - Id             : DisableStructureValidation
+
+  # -------------------- Schema -----------------------------------------
+
+  - Id                     : Schema
+    MappingId              : Schema
+    Type                   : DataPortTreeNode
+    Name                   : "Schema"
+    Description            : "Database schema"
+    Icon                   : schema
+    TransferModes          : [ None, OnChange, Periodic ]
+    ChildNodes             :
+      - Id                 : Table
+
+  # -------------------- Table ------------------------------------------
+
+  - Id                     : Table
+    MappingId              : Table
+    Type                   : DataPortTreeNode
+    Name                   : "Table"
+    Description            : "Table in the database"
+    Icon                   : table
+    TransferModes          : [ OnChange, Periodic, None ]
+    ChildNodes             :
+      - Id                 : ColumnBool
+      - Id                 : ColumnInteger
+      - Id                 : ColumnFloat
+      - Id                 : ColumnDateTime
+      - Id                 : ColumnString
+      - Id                 : ColumnBinary
+      - Id                 : ColumnJSON
+
+  # -------------------- Columns --------------------------------------
+
+  - Id                     : ColumnBool
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Bool Column"
+    Description            : "Boolean column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Bool ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+
+  - Id                     : ColumnInteger
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Integer Column"
+    Description            : "Integer column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+          - Id             : AutoIncrement
+
+  - Id                     : ColumnFloat
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Float Column"
+    Description            : "Float column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Float64, Float32 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnDateTime
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "DateTime Column"
+    Description            : "DateTime column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ DateTime ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnString
+    MappingId               : Column
+    Type                   : DataPortTreeNode
+    Name                   : "String Column"
+    Description            : "String column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ String ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnBinary
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Binary Column"
+    Description            : "Binary column in the database table"
+    Icon                   : datapoint
+    DataTypes              : [ Binary ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnJSON
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "JSON Column"
+    Description            : "JSON column in the database table"
+    Icon                   : folder
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+    ChildNodes             :
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+  - Id: JsonBool
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Bool Property"
+    Description: "Boolean value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Bool ]
+
+  - Id: JsonInteger
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Integer Property"
+    Description: "Integer value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+
+  - Id: JsonFloat
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Float Property"
+    Description: "Float value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Float64, Float32 ]
+
+  - Id: JsonDateTime
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "DateTime Property"
+    Description: "DateTime value in the json structure"
+    Icon: datapoint
+    DataTypes: [ DateTime ]
+
+  - Id: JsonString
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "String Property"
+    Description: "String value in the json structure"
+    Icon: datapoint
+    DataTypes: [ String ]
+
+  - Id: JsonObject
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Json Object"
+    Description: "Json object in the json structure"
+    Icon: folder
+    ChildNodes:
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+PropertyCategories:
+  - Id          : Connection
+    Name        : "Connection"
+    Description : "Connection properties"
+
+  - Id          : Authentication
+    Name        : "Authentication"
+    Description : "Authentication properties"
+
+  - Id          : Other
+    Name        : "Other"
+    Description : "Other properties"
+
+Properties:
+  - Id          : Host
+    Name        : "Host"
+    Description : "The host name or IP address."
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : Port
+    Name        : "Port"
+    Description : "The port."
+    DataType    : UInt16
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 5432
+
+  - Id          : Database
+    Name        : "Database"
+    Description : "The name of the database"
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : UserId
+    Name        : "User name"
+    Description : "The user name"
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : Password
+    Name        : "Password"
+    Description : "The password"
+    DataType    : String
+    UiControl   : PasswordBox
+
+  - Id          : BulkSize
+    Name        : "Bulk size"
+    Description : "The number of rows to be transferred in one bulk."
+    DataType    : Int32
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 10000
+
+  - Id          : MinimumPublishIntervalInMs
+    Name        : "Minimum publish interval"
+    Description : "The minimum time interval between two data transfers in milliseconds."
+    DataType    : UInt32
+    UiControl   : NumericUpDown
+    MinValue    : 100
+    DefaultValue: 1000
+
+  - Id          : ConnectTimeout
+    Name        : "Connect timeout"
+    Description : "The time in seconds to wait for a connection to open. Increase this value when connecting to slow or remote servers."
+    DataType    : Int32
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 30
+
+  - Id          : DisableStructureValidation
+    Name        : "Disable structure validation"
+    Description : "Skips automatic schema/table validation and creation. Only use with pre-validated or trusted node names."
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : PrimaryKey
+    Name        : "Primary key"
+    Description : "States if the column is a primary key"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : NotNull
+    Name        : "Not null"
+    Description : "States if the column is not allowed to be null"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : AutoIncrement
+    Name        : "Auto increment"
+    Description : "States if the column can auto increment"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+Icons:
+
+  - Id          : postgresql
+    Content     : PHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+Cjx0aXRsZT5kYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9wb3N0Z3JlLXNxbC9zb2xpZDwvdGl0bGU+CjxnIGlkPSJkYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9wb3N0Z3JlLXNxbC9zb2xpZCIgc3Ryb2tlPSJub25lIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgo8cGF0aCBkPSJNMTYuMTY1NjYxNCwyLjgyNTIyMTQ0IEMxOC45MjQ3MDk3LDIuODcwNDYxMTQgMjEuMDcxNzE3Miw0LjA5NjQ4NTE5IDIyLjYzMzg3OTUsNi4wOTM4MTg4NiBDMjMuMTk4MjEwNiw2LjgxNTM1NTQ5IDIzLjY0NTM3NTUsNy41OTQ3ODU4NyAyMy45NDQ4ODQ1LDguMzE0NTg2NDMgQzIzLjk4OTgxNTgsOC40MjI1Njg1OCAyNC4wMjk5OTg1LDguNTI2MTYzMzMgMjQuMDY0NjgyNSw4LjYyMjc0MDU4IEMyMi4zOTIwNzUxLDguNDcyNzM4NzkgMjEuMzAwMTA0Miw4Ljg1NjY5NzEgMjAuNzg2NTcwNyw5Ljc3MTIwMjc2IEMyMC4zMTY5Mzg0LDEwLjYwNzUyODkgMjAuNDE0MDM2NywxMS43NDEwMDM0IDIwLjkxMzE5OCwxMy4xMzY1MjA2IEMyMS4xMTAwODQ1LDEzLjY4Njk2MTEgMjEuMzY1NDEzMSwxNC4yNjQyOTc0IDIxLjY3NTY5MDQsMTQuODgyMDg1NyBDMjEuOTY3OTgzMSwxNS40NjQwNjUgMjIuNzM3OTUxLDE2Ljg0NTkwODIgMjIuNzcyODMyMiwxNi45MzA0NjUxIEMyMi45MDg5ODE5LDE3LjI2MDU4NjcgMjMuMDcwMzc2MywxNy41NTc3ODUzIDIzLjI2MDU5OTIsMTcuODQzMjUxNCBDMjMuMzM0MDE4MywxNy45NTM0MzA5IDIzLjY2ODI3MzksMTguMzgzNjI2IDIzLjg3NDAzMzEsMTguNjY4MjQ2NCBDMjMuNzkwNjM0MiwxOC42OTUwMTY2IDIzLjcxNDc5NjMsMTguNzIzNDIwNCAyMy42Mzk0MjM4LDE4Ljc1NzMwMjggTDIzLjU5NDcwMTMsMTguNzc3NTkxIEMyMi45NDEwNTc3LDE5LjA3NzAwMzIgMjIuNjE1Njg5LDE5LjM2MTgwNzkgMjIuNjc2NTksMjAuNDMxMTIxOCBDMjIuNjgzNjM1MywyMC41NTQ0ODEyIDIyLjczNDM2MzgsMjEuMTEwNDEzNCAyMi45MDkyNzEyLDIxLjUzODE5MjcgQzIzLjA4MTE5MDEsMjEuOTU4NjYyNyAyMy4zNTQ5NTcsMjIuMjAyMjc1NyAyMy40ODI4NzgxLDIyLjMwOTA3NTYgQzIzLjQ3NjIzMTIsMjIuMzY3NzA1MyAyMy40NjkwMDM2LDIyLjQzNjE5NjUgMjMuNDYxNDMwNiwyMi41MTE1NzI5IEMyMy40NTMxMzA2LDIyLjU5NDE4NTcgMjMuNDIyMzcyNCwyMi45MTY2NTYgMjMuNDE2NDE0MiwyMi45Nzc0MjUgQzIzLjM5NjEyMjYsMjMuMTg0MzgyOSAyMy4zNzc0MDU2LDIzLjM1OTg0NTUgMjMuMzU1NzUwMiwyMy41NDA0MDA4IEMyMy4xMjQ2Mzg0LDI1LjkyNTU5NTYgMjIuODQ3Njc1MSwyNy40NjczMTgzIDIyLjUyNDg2MDMsMjguMTY1NTY5IEMyMS43MzgyODk0LDI5Ljg2NjkyNjkgMjAuMzM5NTM3NiwzMC4xODgxMzI2IDE5LjQxMjgxMTcsMzAuMzg2NzQ4OCBDMTcuNzExMDAyLDMwLjc1MTQ0MDMgMTYuNjkzODg5MSwzMC4zMjcxMjcxIDE1Ljg3MzQyNjcsMjkuMjEzOTE4NSBDMTUuNjY2ODQwNSwyOC45MzM2MjExIDE1LjMxNjY0NDIsMjguMDM4NDU4OSAxNS4zNjMzMTcxLDI4LjE2NTU2OSBDMTQuOTgyNzg5OCwyNy4zNjA3OTM4IDE0Ljg4NDg1NzMsMjMuODU2MTQyNyAxNC45MzI2OTg0LDIyLjM0MTM4NTIgQzE1LjA3MTgwOTEsMjIuMTMxMTI5MiAxNS4xNjcyMzA5LDIyLjAwODczMTYgMTUuMjE5NzM1OCwyMS45NzM0NjUxIEMxNS4zNDA0MzU3LDIxLjg5MjM5MzQgMTYuNjIzOTMxLDIwLjM3NTY2ODYgMTUuNzA2NjM5MywxOS4zNTMyMjY3IEMxNS4yNTkwNzE5LDE4Ljg1NDM1NDEgMTQuNjY1MzE3NiwxOC42NDY3NTA0IDE0LjE1NTI2MDMsMTguNTY1ODU4NyBDMTQuMjM1MDA0NCwxOC4zMDY5NjAxIDE0LjM1NjI5OTEsMTcuOTY4NDcxNCAxNC41MzE2NTQ1LDE3LjQ5NTgwNzIgQzE0LjU3NzM4MzQsMTcuMzcyNzQ1NCAxNC42MzEzNzQxLDE3LjI0Mzg4MzkgMTQuNzEwNzE2MiwxNy4wNjU1MDkxIEMxNC43MDYxMjY0LDE3LjA3NjA2OTYgMTQuODgxNjQwMSwxNi42ODUxNjMgMTQuOTMyNDYxNiwxNi41NjgwMjI4IEMxNS42NTU2OTM0LDE0LjkwMTAxOTkgMTUuODIzOTk3NywxMy4zMTM0NjYgMTUuMjQzMzY5NiwxMC42MjgwMDU0IEMxNC44ODYzMzM5LDguOTc3MDk4OTggMTMuNTY3MzgzOSw4LjQ2Nzc0Mjc3IDExLjg4ODM3NzUsOC44NTUwNzkxNyBDMTEuMzMzNDI5NSw4Ljk4MzEwMjIzIDEwLjc1NTE3MzksOS4yMDM1MTI3MiAxMC4yODEyMTkxLDkuNDYxOTUwNjEgQzEwLjI5MDY4NjUsOS4zNjEyNDYyNyAxMC4zMDE3MTUxLDkuMjU2NTM4MDIgMTAuMzE0NDYyNSw5LjE0ODIxNDY2IEMxMC40MTc3MzU3LDguMjcwNjI3MTcgMTAuNjA5NjU3NSw3LjQwMTA2NDg5IDEwLjkwOTg5MzQsNi41OTQxMjI3MSBDMTEuODA5MjU3OSw0LjE3NjkwNTc4IDEzLjQ3MDQ5NzMsMi43ODEwMTkyNCAxNi4xNjU2NjE0LDIuODI1MjIxNDQgWiBNMTIuOTM5Nzk3NCwxOS41MzM4ODU4IEMxMy40MjM4NTk1LDE5LjU3MzcwMDkgMTMuOTIyODY1OCwxOS41NTQ1ODkyIDE0LjQ1NzgzMzcsMTkuNjg0Nzk1MiBDMTQuNjc2MTY5MiwxOS43NzI4ODc0IDE1LjIxODA5OTMsMjAuMjUyMzQ4MSAxNC44MDMxNTc3LDIwLjg0OTIzMDggQzE0LjM4ODIxNiwyMS40NDYxMTM1IDEzLjYyNzc5NTUsMjEuNzk1MDQ5NSAxMy45NzQ0OTk1LDIyLjc0OTU0OTMgTDEzLjk2ODU4MiwyMi43MzM1NDA0IEMxMy4wMTc0MzExLDIzLjE0OTAzODMgMTIuMDI4NDQzNSwyMy4xNTQ5OTIgMTAuOTQ1ODU5MiwyMi45MDk0MzQxIEMxMC40MDQ3NDU1LDIyLjc4NjY5NTYgOS45NTk0MTE3OSwyMi41MjgyMDc2IDkuNzU1MTEzNDQsMjIuMTUyMjM0OSBDOS40NjMwMzEwNywyMS42MTQ3MTIzIDEwLjE0Mzc4NTUsMjAuOTE0MzMgMTAuOTk2ODU0NywyMC42MzU4OTMzIEMxMS4zMzMyMjE2LDIwLjUyNjEwNTEgMTEuNjAyNTA2NiwyMC41MDI3MTcxIDExLjgwNDYwNDcsMjAuNDQzMjAyNSBDMTIuMjA5MTQyLDIwLjMyNDA3MjcgMTIuMzU0NDQzMSwyMC4yMzU1Mzk1IDEyLjUzMTk3MTIsMjAuMDM1NTcxMyBDMTIuNTUyMDQ0LDIwLjAxMjk2MTMgMTIuNzMzMTIyMiwxOS43ODQ5NjM4IDEyLjkyMDA5MDcsMTkuNTU3MDQ0NSBMMTIuOTM5Nzk3NCwxOS41MzM4ODU4IFogTTExLjE0OTQwOTksMi40MTE2NTU2NCBDMTEuNTY2Mzg0OCwyLjUyNDcyODE2IDExLjk1MjIzMDQsMi42NDU5MzEwMSAxMi4yOTgwNjI0LDIuNzY3Mzg5MjkgQzEyLjM2NDU1MjIsMi43OTA3NDA5MSAxMi40MjUxNzUyLDIuODEyNTI0NjMgMTIuNDc5MDYxOCwyLjgzMjMxODAyIEMxMS4zNDkwNzczLDMuNTk1NDE5OTQgMTAuNTIzMTk5NCw0Ljc2NTczODM4IDkuOTcyNjYzMjksNi4yNDU0MTExNSBDOS42NDIwMTM5NCw3LjEzNDA5NTU1IDkuNDMzMjk3MzYsOC4wNzk3NTE4NiA5LjMyMTMxNTUsOS4wMzEzNDI1IEM5LjI0OTg4MzU0LDkuNjM4MzUxMzEgOS4yMjgwOTgzNSwxMC4xNDQ4MjkgOS4yMzI5MDg5NCwxMC40OTg5OTE5IEM5LjIzMjk5OTQzLDEwLjUwNDU5OTUgOS4yMzMwNjczLDEwLjUwODgwNTEgOS4yMzMxMjEwMSwxMC41MTIwNjk1IEw5LjIzMzYyNjE3LDEwLjU2NzkxODYgQzkuMjM0NzkwODksMTAuNjI4MTEzNiA5LjIzODI2MDYxLDEwLjcwMjk2MDQgOS4yNDQzMDM3MywxMC44MDk4MzQxIEM5LjI0NTAzODMyLDEwLjgyMjgyNTUgOS4yNjI2NzMwNCwxMS4xMjEyMzg2IDkuMjY4MzQ1NDQsMTEuMjI1NDk2NCBDOS4zMzA3MDE0OSwxMi4zNzE1ODkxIDkuMzE2MDY5NDgsMTMuMzcwMDM5OSA5LjE2NTA2NjM2LDE0LjQ0OTkyNTMgQzguODg1ODY0MzgsMTYuNDQ2Njg0IDkuOTExODAxMTksMTguMjY5ODU2MyAxMS40NzI2MzE4LDE5LjA1OTI3NDYgTDExLjQ5NTA5ODgsMTkuMDM0NTAxNyBDMTEuMzM1NjczNSwxOS4yMDYyOTIyIDExLjEyMjcyNSwxOS40NDA3MDAyIDEwLjkzNDIxMTYsMTkuNjQ4Nzc4NiBMMTAuNzkzNjI4NiwxOS44MDY3OTc3IEMxMC40NDY3MTIyLDE5Ljk5MjMyMTkgOS42OTA4MTMwMSwyMC4yMDkzNTIgOS40MTA1MDczMywyMC4zMDA4NDIxIEM4LjU1NzQzODE1LDIwLjU3OTI3ODggNy44NzY2ODM2NywyMS4yNzk2NjEyIDguMTY4NzY2MDMsMjEuODE3MTgzOCBDOC4yNjA1NjY3NiwyMS45ODYxMjU3IDguNDAxMDM1NDcsMjIuMTMxMzQ2MSA4LjU3Njk5MzM2LDIyLjI1MTE4NzggQzcuNjkxMTIyNTksMjIuOTE3MjY5NSA2LjczNDg4NDY1LDIyLjc5NzU5NjIgNS44Njk3NDk0MiwyMS45NTY2MzQ4IEM1LjA2NzY4MTkxLDIxLjE3Njk3ODggNC4zMjM4ODE0LDE5Ljc3ODQ4NSAzLjYyODg3ODEzLDE3Ljg4Nzc2NDggQzIuNTc2MzAwNiwxNS4wMjQyODI2IDEuNjIwMjQ5NCwxMC43NTY4MDAxIDEuNTQyMzk4NDYsOS4xOTk3MTQ3MiBDMS4yOTkwODQwMiw0LjMzMzM5OTQ2IDMuNDc1NTE3OTEsMi4wMTU2Nzk4NSA3LjIyNjMwMDY3LDEuODkxMzM0OTQgQzguNDczNTg5NDIsMS44NDk5ODUxNyA5LjgzNTgyOTAzLDIuMDU1NDQ3MzcgMTEuMTQ5NDA5OSwyLjQxMTY1NTY0IFogTTI5LjMxODIzNDMsMTkuOTk3MDcxNiBDMjkuMDE2ODM2MSwyMC40NTE3MTYgMjguMzE0ODQ5MywyMC45NzQ3OTczIDI3LjUwOTYyNDQsMjEuMzQ4NTI4OSBDMjYuNzM2MzUyNCwyMS43MDc5ODIyIDI1LjQ1Mzc3ODMsMjEuOTE5NzkwOSAyNC40MTExNzA4LDIxLjg3MTkwNDYgTDI0LjAxOTc4NDUsMjEuNzg0NDE0OSBDMjMuOTAyNTEyNiwyMS4yNzU5NzY1IDIzLjQ0MDAzNSwyMC4zMjIzMjY2IDIzLjczMjAyMTQsMjAuMDIxNzQzOSBDMjQuMjU3NjMxNiwxOS40ODA2NTkyIDI1LjA1NjU0ODMsMTkuMDIwOTE4NiAyNS4yMTY4NTU0LDE4Ljg4ODQzNzQgTDI1LjE0OTc5NTUsMTguODUxMzY0MSBDMjUuNTcxMjY5LDE5LjExMzgxODMgMjYuNDk1NTE0NiwxOS4xMTExOTcyIDI4LjEwMjA5MjYsMTguNzc5NzkwMiBDMjkuMTYzMDI5MiwxOC41NjA2NzIgMjkuODg4NDg1MywxOS4xMzY4NzU5IDI5LjMxODIzNDMsMTkuOTk3MDcxNiBaIE0xNC4yNjU5NiwxMC44MzkzNTk1IEMxNC44MDE4MywxMy4zMTc4MDk2IDE0LjY1NjA4OTQsMTQuNjkyNTI4NCAxNC4wMTUwNzk1LDE2LjE3MDAxNTEgQzEzLjk2NzA1NjgsMTYuMjgwNzA0MyAxMy43OTM5NTIzLDE2LjY2NjIzMTcgMTMuNzk3MjkyNCwxNi42NTg0OTY4IEMxMy43MTAwMzE1LDE2Ljg1NDY1ODQgMTMuNjQ4NzM0OCwxNy4wMDA5Mzk3IDEzLjU5NDE4NzcsMTcuMTQ3NzMyNiBDMTMuMzczNDUyMiwxNy43NDI3MTc0IDEzLjIyNjU5MzMsMTguMTUzNjEwMiAxMy4xMzc3NzkyLDE4LjQ3MzEyNjggQzExLjMzMTYzNDcsMTguNDMyNTgzMSA5Ljg2ODMwNTU0LDE2LjY0MTgzNDMgMTAuMTU1NDMxMiwxNC41ODg0MDgxIEMxMC4zMTY5Mjk3LDEzLjQzMzQ2NjMgMTAuMzMyNDI1MiwxMi4zNzYwODc2IDEwLjI2Njg2ODYsMTEuMTcxMTY5MiBDMTAuMjYxMDQxOSwxMS4wNjQwNzQ4IDEwLjI0MzMxOTQsMTAuNzY0MTc2MSAxMC4yNDI3MDg5LDEwLjc1MzM3OTcgQzEwLjI0MTAwODMsMTAuNzIzMzAzMyAxMC4yMzk1NTAyLDEwLjY5NjI5MTUgMTAuMjM4NTU4NCwxMC42NzE4NjkxIEMxMC4zMzc5OTIsMTAuNTkwOTg5NiAxMC40ODk0NjY5LDEwLjQ5MTUxMyAxMC42NzA2NTYzLDEwLjM5MDYxMjcgQzExLjEwMjU0NzgsMTAuMTUwMTAyMyAxMS42MjI0MjY2LDkuOTQyNjk3MjggMTIuMTEzMTY3Miw5LjgyOTQ4NjQ2IEMxMy4zMTI5MjkzLDkuNTUyNzA4NzYgMTQuMDQ5MTkyMSw5LjgzNzA0MTAxIDE0LjI2NTk2LDEwLjgzOTM1OTUgWiBNMjIuMTE3NzM1MywxLjQ5OTk3ODgzIEMyNC43NTU4NjU5LDEuNTMxMzkzMjggMjcuMTE1MzQwOSwyLjUxMTM3MDg4IDI4Ljc4NDUwMjQsNC42NDQyNzExOSBDMzAuMzEwMzE4Miw2LjU5NDE5MjExIDI4LjgzMjgyMzksMTMuMDg3MTg5NCAyNS41NDEzODUsMTguMjczNzQyNyBDMjUuNTE0OTA2LDE4LjMxNTQ2NzUgMjQuOTM5MDA2NiwxOC4xNDU3OTgzIDI0Ljc2NDAxMDQsMTguMjE5NzUyNCBDMjQuNjgzOTc2NiwxOC4wODk2MDY1IDI0LjU4NjU0MTIsMTcuOTQ5MDUzNCAyNC40OTI4ODg2LDE3LjgxODI5MDYgQzI1LjE5NTU3NjEsMTYuNjU5NDc5OSAyNS4yNTc1Nzc5LDE1LjYzMTc4IDI1LjAyNzk3NjEsMTMuNzE5NzQ3MyBDMjQuOTMxNDIzMiwxMi45MTU2OTM4IDI0LjkwNTIwNDcsMTIuNjA3ODExNCAyNC45MTc2NjcxLDEyLjIyNDE2NTEgQzI0LjkzMDAzODYsMTEuODM2MjE0NCAyNC45NjUyOTEyLDExLjUzMjIwNzYgMjUuMDUwNDYxOSwxMC45NzgwNTExIEMyNS4wNzc2ODI4LDEwLjgwMTY5ODcgMjUuMDkwNjQ2MywxMC43MTY3NjUzIDI1LjEwNDMwMTMsMTAuNjIyOTIzNSBDMjUuMTY5NzYzMSwxMC4xNzMwNDc5IDI1LjIwMTcyNjUsOS44MTkxNzkzNSAyNS4xOTk3NDQsOS40NTMyNDA2OSBDMjUuMzUwNDg5Niw5LjE4NjgwMjkxIDI1LjE5MjU4MjEsOC43MTAxMjE0NyAyNC44NjgxNDcsNy45MzA0MTY5MiBDMjQuNTM1MDcsNy4xMjk5NDMzMiAyNC4wNDMxMDM3LDYuMjcyNDIxODQgMjMuNDIxNTY5OCw1LjQ3Nzc0NzQ1IEMyMS45Mzg5OTYxLDMuNTgyMTczMzggMTkuOTYwMDIyMywyLjI5ODQ2NzcgMTcuNDk0MzE5MiwxLjkzMTY1MjY0IEMxNy44Mjc3Mjk5LDEuOTc1OTY2MDYgMTguMTQ3MjMzOSwyLjAzMTg2OTg5IDE4LjQ0NzIxNTYsMi4wOTEwODA4MiBDMTkuMDczNTQ3LDEuODQ0NDE2NDIgMjAuNjU3NTIxNSwxLjQ4MjU5MDg0IDIyLjExNzczNTMsMS40OTk5Nzg4MyBaIE0yNC4xOTY2MzQsOS42Mzk3Njk0MyBDMjQuMTg5MjQ1OCw5Ljg5MTkzMTA3IDI0LjE2MjA0NTYsMTAuMTUzNzEwNyAyNC4xMTQ3MjI4LDEwLjQ3ODkyOTIgQzI0LjEwMTY1NDgsMTAuNTY4NzM3IDI0LjA4OTI3NjQsMTAuNjQ5ODM3MyAyNC4wNjIwNjc3LDEwLjgyNjE0MDYgQzIzLjk3MTIyODEsMTEuNDE3MTgxNCAyMy45MzIxNDQ5LDExLjc1NDIyMDggMjMuOTE4MTg0NywxMi4xOTE5OTUyIEMyMy45MDM0Nzc5LDEyLjY0NDczNDIgMjMuOTMyMTkxOSwxMi45ODE5MjExIDI0LjAzNTEwODksMTMuODM4OTczMyBDMjQuMjA4MTk4MiwxNS4yODAzOTE3IDI0LjIwMDA0MTQsMTYuMTA0MDA3NiAyMy44NTM0MTc5LDE2Ljg4NDk4OTcgQzIzLjc5NzI1OCwxNi43NzcwODU1IDIzLjc0NTM0NTksMTYuNjY1NzAxNyAyMy42OTcyODA2LDE2LjU0OTE1NzggQzIzLjYzNTgwMjgsMTYuNDAwMTI3IDIyLjgzODQyOTQsMTQuOTY5MSAyMi41NjkzMTU4LDE0LjQzMzI3MjEgQzIyLjI3NTkzMjIsMTMuODQ5MTIwNiAyMi4wMzY0MTEyLDEzLjMwNzUyNzYgMjEuODU0Nzc2OSwxMi43OTk3MjgxIEMyMS40NDQ2NTc0LDExLjY1MzE0NzMgMjEuMzY5NDc2OSwxMC43NzU1Mjk5IDIxLjY1ODUwMjksMTAuMjYwODI5NCBDMjEuOTYyMjUzLDkuNzE5OTA4MTYgMjIuNzU0NjM4Nyw5LjQ2OTIxNTEyIDI0LjE5NjYzNCw5LjYzOTc2OTQzIFogTTEyLjQwOTMzODEsMTAuNDQwMTI0IEMxMi4zNzU5ODA3LDEwLjY3NjMxNTEgMTIuNzQ1MTY2MSwxMS4wNjQwMzMzIDEzLjEwODM4NiwxMS4xMTQ0MDMgQzEzLjQ2Nzg4MDUsMTEuMTY0NTQ4IDEzLjg3MTAzMjcsMTAuODkxMzIzNiAxMy45MDQ4MTQsMTAuNjQ5MDAxMSBDMTMuOTM1NDE1MSwxMC40MjkyNzUgMTMuNjE0OTIyOSwxMC4yNTAxNTI1IDEzLjIwNTcyMzMsMTAuMTkzMTk0IEMxMi43OTcwMDY5LDEwLjEzNjEzNzggMTIuNDM5MjUzNCwxMC4yMjA5MjczIDEyLjQwOTMzODEsMTAuNDQwMTI0IFogTTIyLjcxMTgyNTgsOS45MDg5MTYxOSBDMjIuMzAzMTY5Miw5Ljk2NTg2NDIzIDIxLjk4Mjc1MzgsMTAuMTQ0OTAyNSAyMi4wMTI1NjYxLDEwLjM2NDM3NDIgQzIyLjA0Njc3MzMsMTAuNjA3MTk2IDIyLjQ0OTg3MDksMTAuODgwMjUxNCAyMi44MDk1ODksMTAuODMwMTEzNiBDMjMuMTcyNjU5NCwxMC43Nzk3NzQyIDIzLjU0MTQ5NTksMTAuMzkyMjczNCAyMy41MDg1OTE0LDEwLjE1NjA3NjQgQzIzLjQ3Nzk3LDkuOTM2NjM1ODYgMjMuMTIwNTkxOCw5Ljg1MTk1MjkyIDIyLjcxMTgyNTgsOS45MDg5MTYxOSBaIiBpZD0iSWNvbiIgZmlsbD0iY3VycmVudENvbG9yIj48L3BhdGg+CjwvZz4KPC9zdmc+
+    ContentType : Base64
+

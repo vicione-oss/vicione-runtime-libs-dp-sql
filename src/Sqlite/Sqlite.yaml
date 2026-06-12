@@ -1,0 +1,297 @@
+Common:
+  Target       : DataPort                                                                          # required: Id String to identify the target of the file
+  ContentType  : Rules                                                                             # required: Id String to identify the content of the file
+  Version      : 0.32.0                                                                            # required: Version of the file
+  Date         : 2026-05-11                                                                        # required: Date of the file
+  Description  : "SQLite DataPort"                                                                 # required: Description of the file
+  Author       : "ifm software gmbh"                                                               # required: Author of the file
+  MetadataType : YAML                                                                              # required: Metadata type of the file (YAML, JSON, XML, Text, Binary, ...)
+  Namespace    : "ViciOne.DataPort.Sqlite"                                                         # required: Namespace of the DataPort
+
+Root:
+  Id                       : "SQLiteDataPort"                                                      # required: Id String to identify the root of the DataPort
+  Name                     : "SQLite"                                                              # required: display name of the DataPort
+  Description              : "DataPort for SQLite database"                                        # required: display description of the DataPort
+  Icon                     : sqlite                                                                # required: just one Icon for the DataPort
+  ChildNodes               :
+    - Id                   : SQLite-Database
+      MaxDepth             : 64
+      MaxInstances         : 8
+
+Nodes:
+
+  # -------------------- Database ---------------------------------------
+
+  - Id                     : SQLite-Database
+    Type                   : DataPortNode
+    Name                   : "Database"
+    Description            : "Database"
+    MetadataLength         : 0
+    Icon                   : database
+    TransferDirections     : [ Outbound ]
+    ChildNodes             :
+      - Id                 : Table
+        Required           : true
+    PropertyCategories     :
+      - Id                 : Connection
+        Properties         :
+          - Id             : Filename
+            Required       : true
+          - Id             : Password
+          - Id             : Pooling
+      - Id                 : Other
+        Properties         :
+          - Id             : BulkSize
+          - Id             : MinimumPublishIntervalInMs
+          - Id             : DisableStructureValidation
+
+  # -------------------- Table ------------------------------------------
+
+  - Id                     : Table
+    MappingId              : Table
+    Type                   : DataPortTreeNode
+    Name                   : "Table"
+    Description            : "Table in the SQLite database"
+    Icon                   : table
+    TransferModes          : [ OnChange, Periodic, None ]
+    ChildNodes             :
+      - Id                 : ColumnBool
+      - Id                 : ColumnInteger
+      - Id                 : ColumnFloat
+      - Id                 : ColumnDateTime
+      - Id                 : ColumnString
+      - Id                 : ColumnBinary
+      - Id                 : ColumnJSON
+
+  # -------------------- Columns --------------------------------------
+
+  - Id                     : ColumnBool
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Bool Column"
+    Description            : "Boolean column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ Bool ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+
+  - Id                     : ColumnInteger
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Integer Column"
+    Description            : "Integer column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+          - Id             : AutoIncrement
+
+  - Id                     : ColumnFloat
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Float Column"
+    Description            : "Float column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ Float64, Float32 ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnDateTime
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "DateTime Column"
+    Description            : "DateTime column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ DateTime ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnString
+    MappingId               : Column
+    Type                   : DataPortTreeNode
+    Name                   : "String Column"
+    Description            : "String column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ String ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnBinary
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "Binary Column"
+    Description            : "Binary column in the SQLite table"
+    Icon                   : datapoint
+    DataTypes              : [ Binary ]
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+
+  - Id                     : ColumnJSON
+    MappingId              : Column
+    Type                   : DataPortTreeNode
+    Name                   : "JSON Column"
+    Description            : "JSON column in the SQLite table"
+    Icon                   : folder
+    PropertyCategories     :
+      - Id                 : Other
+        Properties         :
+          - Id             : NotNull
+          - Id             : PrimaryKey
+    ChildNodes             :
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+  - Id: JsonBool
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Bool Property"
+    Description: "Boolean value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Bool ]
+
+  - Id: JsonInteger
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Integer Property"
+    Description: "Integer value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+
+  - Id: JsonFloat
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Float Property"
+    Description: "Float value in the json structure"
+    Icon: datapoint
+    DataTypes: [ Float64, Float32 ]
+
+  - Id: JsonDateTime
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "DateTime Property"
+    Description: "DateTime value in the json structure"
+    Icon: datapoint
+    DataTypes: [ DateTime ]
+
+  - Id: JsonString
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "String Property"
+    Description: "String value in the json structure"
+    Icon: datapoint
+    DataTypes: [ String ]
+
+  - Id: JsonObject
+    MappingId: JsonStruct
+    Type: DataPortTreeNode
+    Name: "Json Object"
+    Description: "Json object in the json structure"
+    Icon: folder
+    ChildNodes:
+      - Id                 : JsonObject
+      - Id                 : JsonBool
+      - Id                 : JsonInteger
+      - Id                 : JsonFloat
+      - Id                 : JsonDateTime
+      - Id                 : JsonString
+
+PropertyCategories:
+  - Id          : Connection
+    Name        : "Connection"
+    Description : "Connection properties"
+
+  - Id          : Other
+    Name        : "Other"
+    Description : "Other properties"
+
+Properties:
+  - Id          : Filename
+    Name        : "Filename"
+    Description : "Path to the database file"
+    DataType    : String
+    UiControl   : TextBox
+
+  - Id          : Password
+    Name        : "Password"
+    Description : "The password"
+    DataType    : String
+    UiControl   : PasswordBox
+
+  - Id          : BulkSize
+    Name        : "Bulk size"
+    Description : "The number of rows to be transferred in one bulk."
+    DataType    : Int32
+    UiControl   : NumericUpDown
+    MinValue    : 1
+    DefaultValue: 10000
+
+  - Id          : MinimumPublishIntervalInMs
+    Name        : "Minimum publish interval"
+    Description : "The minimum time interval between two data transfers in milliseconds."
+    DataType    : UInt32
+    UiControl   : NumericUpDown
+    MinValue    : 100
+    DefaultValue: 1000
+
+  - Id          : DisableStructureValidation
+    Name        : "Disable structure validation"
+    Description : "Skips automatic table validation and creation. Only use with pre-validated or trusted node names."
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : PrimaryKey
+    Name        : "Primary key"
+    Description : "States if the column is a primary key"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : NotNull
+    Name        : "Not null"
+    Description : "States if the column is not allowed to be null"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : AutoIncrement
+    Name        : "Auto increment"
+    Description : "States if the column can auto increment"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+  - Id          : Pooling
+    Name        : "Pooling"
+    Description : "Indicating whether the connection will be pooled"
+    DataType    : Bool
+    UiControl   : ToggleButton
+    DefaultValue: false
+
+Icons:
+
+  - Id          : sqlite
+    Content     : PHN2ZyB2aWV3Qm94PSIwIDAgMzIgMzIiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+Cjx0aXRsZT5kYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9zcWwtbGl0ZS9zb2xpZDwvdGl0bGU+CjxnIGlkPSJkYXJrLXRoZW1lL2ljb24vbW9ub2Nocm9tZS8zMngzMi9kYXRhcG9ydC9zcWwtbGl0ZS9zb2xpZCIgc3Ryb2tlPSJub25lIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgo8cGF0aCBkPSJNMjMuNDYxMjQ2NywyLjMzMTA4NTQ0IEMyNC45NTY3NjM2LDAuOTYzODE1ODQ3IDI2LjQ3MjAyMTksMC41MDE5ODk5MTggMjcuNzIzNTI3NCwxLjY1MTcwNzExIEMzMC43Nzc2ODc1LDQuNDU4MzY5NjUgMjcuNzQ0ODc1NSwxMC44NzQ3NDY5IDI0Ljk2MTEyNTEsMTUuMzkxMzI0MSBDMjIuOTM2OTU0OSwxNi4wNjE0ODAxIDIwLjU3NzY0MjEsMTcuNTQxNTQ1OSAyMC41Nzc2NDIxLDE3LjU0MTU0NTkgQzIwLjYxMTc2ODYsMTcuNTIzMzk1MSAyMC44MzExMzU2LDE3LjQwOTQ1ODggMjEuNTAyMjY4NywxNy4xMTk0NDY5IEMyMS45OTYwMzAzLDE2LjkwNTY3OCAyMy40NzAxOTkxLDE2LjU0NDU4ODMgMjQuMzY3OTY4NCwxNi4zMzM2NTcxIEMyMi44NjkyMzc3LDE4LjY2MTQ0NTEgMjEuNTg2NzQzLDIwLjI5MDc5MzUgMjEuNTg2NzQzLDIwLjI5MDc5MzUgQzIxLjU4Njc0MywyMC4yOTA3OTM1IDE4Ljk3MTk0MTIsMjEuMzg1MzkwNSAxOC4xNjMyMzcyLDIzLjkzMTg2NDEgQzE4LjYzMTk3NzksMjEuMjE1NjA1IDE5LjQwOTY5MjcsMTguMzgwNTQxNSAyMC41MDcxNzAzLDE1LjM1OTQwMDYgQzIxLjQ4NzM0NzksMTIuNjYxNTE0MyAyNC43NjE2NDYzLDUuMzc2MTA5NzYgMjcuMTgwODcxNywzLjEyNTM4ODIxIEMyNC41MjY1ODczLDUuMzA0Njk1ODEgMjEuNjI2NDU1MSw5Ljg2ODA5NDA2IDE5LjUzNjE3NDYsMTUuNTU1NjcwNyBDMTguMjk4OTAxMiwxOS4zMjMzNzIgMTcuNjI5MzA0NCwyMi45MzgyNDE3IDE3LjUyMDI2ODIsMjUuOTM1NzU4MyBDMTcuNDQ4MTg5NiwyNy44OTY4MDQxIDE3LjYxMjc3NjgsMjkuNTk3MjU5OSAxOC4wMTc5MzIyLDMwLjg5NDc5NTQgTDE3LjgzMDYxOTYsMzEgQzE3LjU1NDcwMDcsMzAuMzQxNDA4MyAxNy4zMzgyMzUzLDI5LjExMDg0MTEgMTcuMjIzMjMwOCwyNy42NzgzNTMxIEMxNy4xMzY0NjEsMjYuNTk2MjE5IDE3LjEwNzUzNzcsMjUuMzk4OTk1OSAxNy4xNTU3NDMyLDI0LjI0NDI2NTYgQzE3LjE0MjY1ODgsMjQuMDczNTU2OSAxNy4xMzQ4NTQxLDIzLjk2MjYyOTggMTcuMTM0ODU0MSwyMy45NjI2Mjk4IEMxNy4xMzQ4NTQxLDIzLjk2MjYyOTggMTYuODkzNTk3MywyMi4yODg2ODEzIDE2LjU0NjUxOCwyMC45MTM2MzI4IEMxNi4zOTI4ODAzLDIwLjMwMzI1NjQgMTYuMjE3OTE3NCwxOS43NTEzMzU0IDE2LjAzNDIwODcsMTkuNDMxNDYxNSBDMTUuOTM5NTg4MywxOS4yNjYzODI3IDE2LjA0NDUxNTUsMTguNTg4Mzc1OSAxNi4zMDg1ODk2LDE3LjU4NDEzNDEgQzE2LjQ2Mjk2MTksMTcuODU5MTI1MSAxNy4xMTQ2NTM3LDE5LjAzNTM3NDIgMTcuMjQ1NDk3MSwxOS40MTQzNjU2IEMxNy4zOTI4NjgxLDE5Ljg0Mjg3MiAxNy40MjM4NTczLDE5Ljk2NTY0NzIgMTcuNDIzODU3MywxOS45NjU2NDcyIEMxNy40MjM4NTczLDE5Ljk2NTY0NzIgMTcuMDY2NDQ4MywxOC4wNzExOTE0IDE2LjQ3OTk0ODUsMTYuOTY1NzQxNCBDMTYuNjA4NDk2NCwxNi41MTg4MTMxIDE2Ljc2MjA2NTIsMTYuMDI0ODI3MiAxNi45MzU4MzQ0LDE1LjQ5Njc4OTcgQzE3LjEzODk4NiwxNS44NjQwMjc2IDE3LjYwMDYxMDcsMTYuNzA3NTE2MSAxNy43Njc0OTM0LDE3LjEwNzE1MDUgQzE3Ljc4Mjg3MzIsMTcuMTQ0Mjc2MyAxNy43OTY4NzU4LDE3LjE3OTAzNzMgMTcuODA2OTc2LDE3LjIwNzY1MDIgQzE3LjgzMDYxOTYsMTcuMjc2OTM1OSAxNy44NTA1OTA0LDE3LjMzNTgxNyAxNy44Njg0OTUzLDE3LjM4OTczMjEgQzE3Ljk0NzQ4NSwxNy42MjU2ODgyIDE3Ljk3NjM0OTMsMTcuNzI2NTg5NyAxNy45ODM1ODY5LDE3Ljc1MjkyNzggQzE3Ljk3NjM3MjksMTcuNzEyNzIyOCAxNy45NDI1NTM4LDE3LjU0MDgxNTggMTcuODg1NzExNSwxNy4yOTI1NDMgQzE3Ljg1ODM5NTEsMTcuMTcyNjUyNyAxNy44MjQxOTIyLDE3LjAzMTcxNjUgMTcuNzg2MzE2NSwxNi44ODE1NTgxIEMxNy42Mzg0ODY0LDE2LjI5NjI5NDggMTcuNDEzOTg2NywxNS41MzAxMzIgMTcuMTI2NTkwMywxNC45Mjk3MzQ2IEMxNy44NjQzNjM0LDEwLjk3NDc3MzcgMjAuMjM5MDU2MSw1Ljc5NjA4MDQ5IDIyLjc5NzM4ODcsMy4wMDAyOTU1NyBDMjMuMDE3NzU2NSwyLjc1OTU2OTEgMjMuMjM5MjcyLDIuNTM0MjEzMTggMjMuNDYxMjQ2NywyLjMzMTA4NTQ0IFogTTIwLjc5NzM4ODcsMy4wMDAyOTU1NyBDMTkuMDQ2MzQ3Miw0Ljc1MTA3ODU2IDE2LjgwNjU5OTMsMTAuMTQyMDc1NiAxNS42NTc3Mzk0LDE0LjU0MDI5NzkgQzE0LjU0NjUxOCwxOC43OTQ0MjcxIDEzLjk5NjQwODMsMTkuMzY1NTEzMiAxNC4wMzQyMDg3LDE5LjQzMTQ2MTUgQzE0LjIxNzkxNzQsMTkuNzUxMzM1NCAxNC4zOTI4ODAzLDIwLjMwMzI1NjQgMTQuNTQ2NTE4LDIwLjkxMzYzMjggQzE0Ljg5MzU5NzMsMjIuMjg4NjgxMyAxNS4xMzQ4NTQxLDIzLjk2MjYyOTggMTUuMTM0ODU0MSwyMy45NjI2Mjk4IEMxNS4xMzQ4NTQxLDIzLjk2MjYyOTggMTUuMTQyNjU4OCwyNC4wNzM1NTY5IDE1LjE1NTc0MzIsMjQuMjQ0MjY1NiBDMTUuMTA3NTM3NywyNS4zOTg5OTU5IDE1LjEzNjQ2MSwyNi41OTYyMTkgMTUuMjIzMjMwOCwyNy42NzgzNTMxIEMxNS4yMzE5NDQ5LDI3Ljc4Njg5NTggMTUuMjQxMjQxNiwyNy44OTQyNzkzIDE1LjI1MTEwMjUsMjguMDAwMzQyNSBMNiwyOCBDNC44OTU0MzA1LDI4IDQsMjcuMTA0NTY5NSA0LDI2IEw0LDUgQzQsMy44OTU0MzA1IDQuODk1NDMwNSwzIDYsMyBMMjAuNzk3Mzg4NywzLjAwMDI5NTU3IFoiIGlkPSJJY29uIiBmaWxsPSJjdXJyZW50Q29sb3IiPjwvcGF0aD4KPC9nPgo8L3N2Zz4=
+    ContentType : Base64
+

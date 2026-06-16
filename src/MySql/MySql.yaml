@@ -29,6 +29,10 @@ Nodes:
     MetadataLength         : 0
     Icon                   : database
     TransferDirections     : [ Outbound ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Database name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : Schema
     PropertyCategories     :
@@ -60,6 +64,10 @@ Nodes:
     Description            : "Database schema"
     Icon                   : schema
     TransferModes          : [ None, OnChange, Periodic ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Schema name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : Table
 
@@ -72,6 +80,10 @@ Nodes:
     Description            : "Table in the database"
     Icon                   : table
     TransferModes          : [ OnChange, Periodic, None ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Table name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : ColumnBool
       - Id                 : ColumnInteger
@@ -90,6 +102,10 @@ Nodes:
     Description            : "Boolean column in the database table"
     Icon                   : datapoint
     DataTypes              : [ Bool ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -102,6 +118,10 @@ Nodes:
     Description            : "Integer column in the database table"
     Icon                   : datapoint
     DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -116,6 +136,10 @@ Nodes:
     Description            : "Float column in the database table"
     Icon                   : datapoint
     DataTypes              : [ Float64, Float32 ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -129,6 +153,10 @@ Nodes:
     Description            : "DateTime column in the database table"
     Icon                   : datapoint
     DataTypes              : [ DateTime ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -142,6 +170,10 @@ Nodes:
     Description            : "String column in the database table"
     Icon                   : datapoint
     DataTypes              : [ String ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -155,6 +187,10 @@ Nodes:
     Description            : "Binary column in the database table"
     Icon                   : datapoint
     DataTypes              : [ Binary ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -167,6 +203,10 @@ Nodes:
     Name                   : "JSON Column"
     Description            : "JSON column in the database table"
     Icon                   : folder
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,64}'
+        Message            : "Column name cannot contain control characters and can not be longer than 64 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :

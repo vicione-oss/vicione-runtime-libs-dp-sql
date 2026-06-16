@@ -29,6 +29,10 @@ Nodes:
     MetadataLength         : 0
     Icon                   : database
     TransferDirections     : [ Outbound ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Database name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : Table
         Required           : true
@@ -54,6 +58,10 @@ Nodes:
     Description            : "Table in the SQLite database"
     Icon                   : table
     TransferModes          : [ OnChange, Periodic, None ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Table name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : ColumnBool
       - Id                 : ColumnInteger
@@ -72,6 +80,10 @@ Nodes:
     Description            : "Boolean column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ Bool ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -84,6 +96,10 @@ Nodes:
     Description            : "Integer column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -98,6 +114,10 @@ Nodes:
     Description            : "Float column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ Float64, Float32 ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -111,6 +131,10 @@ Nodes:
     Description            : "DateTime column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ DateTime ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -124,6 +148,10 @@ Nodes:
     Description            : "String column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ String ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -137,6 +165,10 @@ Nodes:
     Description            : "Binary column in the SQLite table"
     Icon                   : datapoint
     DataTypes              : [ Binary ]
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :
@@ -149,6 +181,10 @@ Nodes:
     Name                   : "JSON Column"
     Description            : "JSON column in the SQLite table"
     Icon                   : folder
+    NameValidations        :
+      - Type               : Regex
+        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
         Properties         :

@@ -91,7 +91,7 @@ Nodes:
     TransferModes          : [ None, OnChange, Periodic ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Database name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : Schema
@@ -107,7 +107,7 @@ Nodes:
     TransferModes          : [ None, OnChange, Periodic ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Schema name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : Table
@@ -123,7 +123,7 @@ Nodes:
     TransferModes          : [ OnChange, Periodic, None ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Table name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     ChildNodes             :
       - Id                 : ColumnBool
@@ -145,7 +145,7 @@ Nodes:
     DataTypes              : [ Bool ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -161,7 +161,7 @@ Nodes:
     DataTypes              : [ Int32, Int64, Int16, Int8, UInt32, UInt64, UInt16, UInt8 ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -179,7 +179,7 @@ Nodes:
     DataTypes              : [ Float64, Float32 ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -196,7 +196,7 @@ Nodes:
     DataTypes              : [ DateTime ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -213,7 +213,7 @@ Nodes:
     DataTypes              : [ String ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -230,7 +230,7 @@ Nodes:
     DataTypes              : [ Binary ]
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other
@@ -246,7 +246,7 @@ Nodes:
     Icon                   : folder
     NameValidations        :
       - Type               : Regex
-        Pattern            : '[^\x00-\x1f\x7f]{1,128}'
+        Pattern            : '^[^\x00-\x1f\x7f]{1,128}$'
         Message            : "Column name cannot contain control characters and can not be longer than 128 characters or shorter than 1 character."
     PropertyCategories     :
       - Id                 : Other

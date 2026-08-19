@@ -6,9 +6,12 @@
 
 - Add new icons to DataPorts
 - Update `.yaml` files format to `2.0.0` (`ViciOne.TreeBuilder`)
-- Update `Microsoft.Data.Sqlite` to `10.0.9`
+- Update `Microsoft.Data.Sqlite` to `10.0.11`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.TreeBuilder` to `2.1.0`
+- Update `Microsoft.Data.SqlClient` to `7.0.2`
+- Update `MySqlConnector` to `2.6.2`
+- Update `Npgsql` to `10.0.3`
 
 ## 0.32.0 - 2026-05-11
 

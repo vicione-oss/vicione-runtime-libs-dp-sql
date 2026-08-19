@@ -8,6 +8,7 @@
 - Update `.yaml` files format to `2.0.0` (`ViciOne.TreeBuilder`)
 - Update `Microsoft.Data.Sqlite` to `10.0.9`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
+- Update `ViciOne.TreeBuilder` to `2.1.0`
 
 ## 0.32.0 - 2026-05-11
 

@@ -83,10 +83,22 @@ include:
       test: true
       test_coverage: true
       test_filter: "/[(Category!=System)&(Category!=Integration)&(Category!=Interoperability)]"
+  - component: $CI_SERVER_FQDN/vicione-oss/tooling/dotnet-component/dotnet-test@2
+    inputs:
+      name: "dotnet Interoperability Test"
+      rules: *rules_not_tags
+      build_job_name: "dotnet Build+Test"
+      services:
+        - docker:dind
+      filter: "/[Category=Interoperability]"
   - project: 'vicione-oss/tooling/templates'
     file: '/CI-Templates/v2/dotnet.yml'
   - project: 'vicione-oss/tooling/ci-templates'
     file: '/project/v1/dotnet.yml'
+
+dotnet Interoperability Test:
+  variables:
+    DOCKER_HOST: tcp://docker:2375
 
 Push MySql binaries:
   extends: .dotnet-release-raw-rids

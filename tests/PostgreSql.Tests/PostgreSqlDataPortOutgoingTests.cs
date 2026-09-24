@@ -240,6 +240,7 @@ public class PostgreSqlDataPortOutgoing_
                 { typeof(DateTime), new DateTime(2024, 10, 23) },
                 { typeof(TimeSpan), TimeSpan.FromMinutes(5.5) },
                 { typeof(byte), (byte)2 },
+                { typeof(sbyte), (sbyte)-3 },
                 { typeof(char), "A" },
                 { typeof(byte[]), new byte[] { 1,1,1,1 } },
             };

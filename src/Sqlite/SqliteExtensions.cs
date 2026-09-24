@@ -24,6 +24,7 @@ internal static class SqliteExtensions
         { typeof(TimeSpan), SqliteType.Text },
         { typeof(Guid), SqliteType.Text },
         { typeof(byte), SqliteType.Integer },
+        { typeof(sbyte), SqliteType.Integer },
         { typeof(byte[]), SqliteType.Blob },
         { typeof(char), SqliteType.Text },
         { typeof(string), SqliteType.Text },

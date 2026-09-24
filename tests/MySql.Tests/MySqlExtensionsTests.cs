@@ -13,6 +13,7 @@ public class MySqlExtensions_ConvertType
     [Theory]
     [InlineData(typeof(string), "text")]
     [InlineData(typeof(int), "int")]
+    [InlineData(typeof(sbyte), "tinyint")]
     [InlineData(typeof(double), "Double")]
     [InlineData(typeof(byte[]), "varbinary(8000)")]
     [InlineData(typeof(decimal), "decimal(65,30)")]

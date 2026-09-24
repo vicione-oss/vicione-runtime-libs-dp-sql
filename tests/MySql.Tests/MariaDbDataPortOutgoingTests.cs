@@ -234,6 +234,7 @@ public class MariaDbDataPortOutgoing_Interoperability(MariaDbTestSystem mariaDb)
             { typeof(char), "A" },
             { typeof(byte[]), new byte[] { 1,1,1,1 } },
             { typeof(byte), (byte)2 },
+            { typeof(sbyte), (sbyte)-3 },
             { typeof(ushort), (ushort)7 },
             { typeof(uint), (uint)7 },
             { typeof(int), 1 },

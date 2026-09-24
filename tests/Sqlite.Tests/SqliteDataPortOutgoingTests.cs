@@ -232,6 +232,7 @@ public class SqliteDataPortOutgoing_
             { typeof(DateTime), new DateTime(2024, 10, 23) , "2024-10-23 00:00:00"},
             { typeof(TimeSpan), TimeSpan.FromMinutes(5.5) , TimeSpan.FromMinutes(5.5).ToString()},
             { typeof(byte), (byte)2 , 2},
+            { typeof(sbyte), (sbyte)-3, -3 },
             { typeof(char), 'A' , "A"},
             { typeof(byte[]), new byte[] { 1,1,1,1 }, new byte[] { 1,1,1,1 } },
         };

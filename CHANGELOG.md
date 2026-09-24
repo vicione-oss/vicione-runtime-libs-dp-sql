@@ -15,6 +15,10 @@
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`
 
+### Fixed
+
+- **Breaking:** Store `Int8` values in integer columns instead of JSON text in SQL DataPorts, existing tables with an `Int8` text column fail structure validation until the column is migrated or `DisableStructureValidation` is set
+
 ### Removed
 
 - **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption

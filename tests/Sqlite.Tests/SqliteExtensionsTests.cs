@@ -195,6 +195,7 @@ public class ConvertType
     [Theory]
     [InlineData(typeof(string), SqliteType.Text)]
     [InlineData(typeof(int), SqliteType.Integer)]
+    [InlineData(typeof(sbyte), SqliteType.Integer)]
     [InlineData(typeof(double), SqliteType.Real)]
     [InlineData(typeof(byte[]), SqliteType.Blob)]
     [MemberData(nameof(GetNullableTypes))]

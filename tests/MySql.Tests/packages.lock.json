@@ -47,20 +47,20 @@
       },
       "Testcontainers.MariaDb": {
         "type": "Direct",
-        "requested": "[4.14.0, )",
-        "resolved": "4.14.0",
-        "contentHash": "1Sh3tlT6jlnlLATiCd2/0U25DeSHhEOd9tL0CBDxqMhA+Yeqpkb5ceClltiwIA9cKOef31kSINQTRRwM5apBGw==",
+        "requested": "[4.15.0, )",
+        "resolved": "4.15.0",
+        "contentHash": "nv6B/fXy8ngJDS7Vv3WQfR57vZ9QVt+0sKHnNCsTTzXOeN4j7GcPP9dRTYoYuNt9F/yL4gr4gpYl848EPj59Pg==",
         "dependencies": {
-          "Testcontainers": "4.14.0"
+          "Testcontainers": "4.15.0"
         }
       },
       "Testcontainers.MySql": {
         "type": "Direct",
-        "requested": "[4.14.0, )",
-        "resolved": "4.14.0",
-        "contentHash": "8Fzl3JTS0DwnTHSuPiynNcAOIpyn0sd3u6qFiZgmPl0tzWOWYoKVthciXtMOD/QJCc6s+XSSRKVbz0q/VUupog==",
+        "requested": "[4.15.0, )",
+        "resolved": "4.15.0",
+        "contentHash": "pgY+pjNJ8z/kwdv1bdAPWSnSXqFiDGg4rmQcX4ubzZCgiX8Q2CFOaOAJrM9ADdFP9mPas5GemyZH4zmwU39ekg==",
         "dependencies": {
-          "Testcontainers": "4.14.0"
+          "Testcontainers": "4.15.0"
         }
       },
       "ViciOne.ManagedEngine": {
@@ -385,8 +385,8 @@
       },
       "Testcontainers": {
         "type": "Transitive",
-        "resolved": "4.14.0",
-        "contentHash": "ojuBi91xcMsR6vnFuNsQDWU9tlZlrtmqy95VPNWVVnh24GiwFL/WMnVmb6bRv8LqovtnKPJN9cpmH1k02Z4ZoA==",
+        "resolved": "4.15.0",
+        "contentHash": "8tCZKMm++C/9dHIr8lsE1iDBIBmthbo2XlGFDr4gorT1vgZrJwU36fNkCGuX7h7V39rpQoTK/aG+FhJz3jhY3A==",
         "dependencies": {
           "Docker.DotNet.Enhanced": "4.3.3",
           "Docker.DotNet.Enhanced.X509": "4.3.3",

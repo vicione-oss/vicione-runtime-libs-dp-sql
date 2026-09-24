@@ -26,6 +26,7 @@
 
 - **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption
 - Remove `AutoIncrement` option from SQLite columns, it had no effect
+- **Breaking:** Remove `PrimaryKey` option from binary and JSON columns in SQL DataPorts, most databases cannot use these column types as keys
 
 ## 0.32.0 - 2026-05-11
 

@@ -14,6 +14,10 @@
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`
 
+### Removed
+
+- **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption
+
 ## 0.32.0 - 2026-05-11
 
 ### Added

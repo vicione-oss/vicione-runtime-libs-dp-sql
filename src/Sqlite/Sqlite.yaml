@@ -41,7 +41,6 @@ Nodes:
         Properties         :
           - Id             : Filename
             Required       : true
-          - Id             : Password
           - Id             : Pooling
       - Id                 : Other
         Properties         :
@@ -267,12 +266,6 @@ Properties:
     Description : "Path to the database file"
     DataType    : String
     UiControl   : TextBox
-
-  - Id          : Password
-    Name        : "Password"
-    Description : "The password"
-    DataType    : String
-    UiControl   : PasswordBox
 
   - Id          : BulkSize
     Name        : "Bulk size"

@@ -8,12 +8,6 @@ internal sealed class SqliteDataPortProperties(SqliteDataPortCommunication commu
         set => communication.Filename = value;
     }
 
-    internal string? Password
-    {
-        get => communication.Password;
-        set => communication.Password = value;
-    }
-
     internal bool? Pooling
     {
         get => communication.Pooling;

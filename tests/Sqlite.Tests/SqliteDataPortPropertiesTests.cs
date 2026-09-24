@@ -36,39 +36,6 @@ public class SqliteDataPortProperties_DataSource
     };
 }
 
-public class SqliteDataPortProperties_Password
-{
-    [Theory]
-    [MemberData(nameof(Conversion))]
-    public void Getter_returns_value(string? value)
-    {
-        SqliteDataPortProperties properties = new(new() { Password = value, });
-
-        properties.Password.Should().Be(value);
-    }
-
-    [Theory]
-    [MemberData(nameof(Conversion))]
-    public void Setter_sets_value(string? value)
-    {
-        SqliteDataPortCommunication communication = new();
-
-        _ = new SqliteDataPortProperties(communication)
-        {
-            Password = value,
-        };
-
-        communication.Password.Should().Be(value);
-    }
-
-    public static TheoryData<string?> Conversion() => new()
-    {
-        { null! },
-        { string.Empty },
-        { "pass" },
-    };
-}
-
 public class SqliteDataPortProperties_Pooling
 {
     [Theory]

@@ -12,8 +12,6 @@ internal static class SqliteDataPortCommunicationExtensions
             DataSource = properties.DataSource,
             Mode = allowCreate ? SqliteOpenMode.ReadWriteCreate : SqliteOpenMode.ReadOnly,
         };
-        if (properties.Password is not null)
-            builder.Password = properties.Password;
         if (properties.Pooling is not null)
             builder.Pooling = properties.Pooling.Value;
         return builder.ConnectionString;

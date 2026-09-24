@@ -18,7 +18,8 @@ internal static class SqlServerCommands
         CASE c.is_nullable WHEN 'TRUE' THEN CAST(0 as bit) ELSE CAST(1 as bit) END AS 'not null',
         ISNULL(c.is_identity, 'FALSE')  AS 'auto increment',
         c.precision as 'precision',
-        c.scale as 'scale'
+        c.scale as 'scale',
+        c.max_length as 'length'
     FROM sys.schemas AS s
         LEFT JOIN sys.tables t ON s.schema_id = t.schema_id
         LEFT JOIN sys.columns c ON c.object_id = t.object_id
@@ -49,8 +50,12 @@ internal static class SqlServerCommands
         {
             "decimal" => $"{dataType}({reader.GetFieldValue<byte>(7)},{reader.GetFieldValue<byte>(8)})",
             "varbinary" => $"{dataType}(MAX)",
+            "nvarchar" => ComposeNvarcharType(reader.GetFieldValue<short>(9)),
             _ => dataType,
         };
+
+    private static string ComposeNvarcharType(short maxLengthInBytes)
+        => maxLengthInBytes == -1 ? "nvarchar(MAX)" : $"nvarchar({maxLengthInBytes / 2})";
 
     internal static string ComposeTableNameTwoPart(TableInfo tableInfo)
         => ComposeTableNameTwoPart(tableInfo.Schema, tableInfo.Table);

@@ -9,6 +9,9 @@ namespace ViciOne.Suite.DataPort;
 
 internal static class SqlServerExtensions
 {
+    // A text column cannot be a key; 450 nvarchar characters fill the 900-byte limit of a clustered key.
+    internal const string StringPrimaryKeyType = "nvarchar(450)";
+
     private static readonly Dictionary<Type, SqlDbType> s_typeMapping = new()
     {
         { typeof(bool), SqlDbType.Bit },
@@ -47,6 +50,9 @@ internal static class SqlServerExtensions
             .ToString().ToLower(CultureInfo.InvariantCulture);
     }
 
+    internal static string ConvertType(Type type, bool primaryKey)
+        => primaryKey && type == typeof(string) ? StringPrimaryKeyType : ConvertType(type);
+
     internal static IReadOnlyCollection<Database> Unify(this IReadOnlyCollection<INode> nodes)
     {
         var databaseNodes = nodes.Where(n => n.DesignId == RelationalDatabaseNodeDesignId.DatabaseNodeId);
@@ -73,7 +79,7 @@ internal static class SqlServerExtensions
                         var notNull = column.GetPropertyValueOrDefault(RelationalDatabaseNodeProperty.NotNull, false) || primaryKey || autoIncrement;
                         columns.Add(new(
                             column.Name,
-                            ConvertType(isJsonColumn ? typeof(string) : column.ValueType ?? throw new InvalidOperationException("The column must have a type.")),
+                            ConvertType(isJsonColumn ? typeof(string) : column.ValueType ?? throw new InvalidOperationException("The column must have a type."), primaryKey),
                             primaryKey,
                             notNull,
                             autoIncrement));

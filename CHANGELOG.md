@@ -21,7 +21,7 @@
 - **Breaking:** Store `Int8` values in integer columns instead of JSON text in SQL DataPorts, existing tables with an `Int8` text column fail structure validation until the column is migrated or `DisableStructureValidation` is set
 - Apply `ConnectTimeout` when testing a MariaDB connection
 - Limit PostgreSQL `ConnectTimeout` to `1024` seconds, the maximum `Npgsql` accepts
-- Create string primary keys as `varchar(255)` in MySQL and MariaDB, a `text` column cannot be a key
+- Create string primary keys as `varchar(255)` in MySQL and MariaDB and as `nvarchar(450)` in SQL Server, a `text` column cannot be a key
 
 ### Removed
 

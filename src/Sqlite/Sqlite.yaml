@@ -308,7 +308,7 @@ Properties:
     Description : "Indicating whether the connection will be pooled"
     DataType    : Bool
     UiControl   : ToggleButton
-    DefaultValue: false
+    DefaultValue: true
 
 Icons:
 

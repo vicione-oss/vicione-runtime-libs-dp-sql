@@ -341,6 +341,7 @@ Properties:
     DataType    : Int32
     UiControl   : NumericUpDown
     MinValue    : 1
+    MaxValue    : 1024
     DefaultValue: 30
 
   - Id          : DisableStructureValidation

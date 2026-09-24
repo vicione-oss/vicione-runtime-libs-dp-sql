@@ -17,6 +17,7 @@
 ### Removed
 
 - **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption
+- Remove `AutoIncrement` option from SQLite columns, it had no effect
 
 ## 0.32.0 - 2026-05-11
 

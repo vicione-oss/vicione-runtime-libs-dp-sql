@@ -98,9 +98,9 @@ public class SqliteDataPortOutgoing_
     }
 
     [Fact]
-    public async Task Can_create_columns_with_AutoIncrement_and_NotNull_or_PrimaryKey()
+    public async Task Can_create_columns_with_NotNull_or_PrimaryKey()
     {
-        var filename = $"{nameof(Can_create_columns_with_AutoIncrement_and_NotNull_or_PrimaryKey)}.db";
+        var filename = $"{nameof(Can_create_columns_with_NotNull_or_PrimaryKey)}.db";
 
         File.Delete(filename);
 

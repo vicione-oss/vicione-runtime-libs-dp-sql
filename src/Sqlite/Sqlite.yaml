@@ -104,7 +104,6 @@ Nodes:
         Properties         :
           - Id             : NotNull
           - Id             : PrimaryKey
-          - Id             : AutoIncrement
 
   - Id                     : ColumnFloat
     MappingId              : Column
@@ -300,13 +299,6 @@ Properties:
   - Id          : NotNull
     Name        : "Not null"
     Description : "States if the column is not allowed to be null"
-    DataType    : Bool
-    UiControl   : ToggleButton
-    DefaultValue: false
-
-  - Id          : AutoIncrement
-    Name        : "Auto increment"
-    Description : "States if the column can auto increment"
     DataType    : Bool
     UiControl   : ToggleButton
     DefaultValue: false

@@ -8,6 +8,7 @@
 - Update `.yaml` files format to `2.0.0` (`ViciOne.TreeBuilder`)
 - Rename the company to `ViciOne open automation gmbh` in the package metadata, the license and the `Author` of the `.yaml` files
 - Default SQLite `Pooling` to `true`, matching `Microsoft.Data.Sqlite`
+- Default `MinimumPublishIntervalInMs` to `1000` when a SQL DataPort configuration omits it, matching the `.yaml` default
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.TreeBuilder` to `2.1.0`

@@ -27,6 +27,7 @@ internal static class PostgreSqlExtensions
         { typeof(TimeSpan), NpgsqlDbType.Interval },
         { typeof(Guid), NpgsqlDbType.Uuid },
         { typeof(byte), NpgsqlDbType.Smallint },
+        { typeof(sbyte), NpgsqlDbType.Smallint },
         { typeof(byte[]), NpgsqlDbType.Bytea },
         { typeof(char), NpgsqlDbType.Text },
         { typeof(string), NpgsqlDbType.Text },

@@ -11,16 +11,11 @@ public class SqliteDataPortCommunicationExtensions_ToConnectionString
         => CreateCommunication().ToConnectionString().Should()
         .Contain("Data Source=file.db").And
         .Contain("Mode=ReadOnly").And
-        .NotContain("Password").And
         .NotContain("Pooling");
 
     [Fact]
     public void Allows_creation()
         => CreateCommunication().ToConnectionString(true).Should().Contain("Mode=ReadWriteCreate");
-
-    [Fact]
-    public void Sets_Password_if_available()
-        => CreateCommunication(c => c.Password = "pw").ToConnectionString().Should().Contain("Password=pw");
 
     [Fact]
     public void Sets_Pooling_if_available()

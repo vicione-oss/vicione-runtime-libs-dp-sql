@@ -7,12 +7,25 @@
 - Add new icons to DataPorts
 - Update `.yaml` files format to `2.0.0` (`ViciOne.TreeBuilder`)
 - Rename the company to `ViciOne open automation gmbh` in the package metadata, the license and the `Author` of the `.yaml` files
+- Default SQLite `Pooling` to `true`, matching `Microsoft.Data.Sqlite`
+- Default `MinimumPublishIntervalInMs` to `1000` when a SQL DataPort configuration omits it, matching the `.yaml` default
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.TreeBuilder` to `2.1.0`
 - Update `Microsoft.Data.SqlClient` to `7.1.0`
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`
+
+### Fixed
+
+- **Breaking:** Store `Int8` values in integer columns instead of JSON text in SQL DataPorts, existing tables with an `Int8` text column fail structure validation until the column is migrated or `DisableStructureValidation` is set
+- Apply `ConnectTimeout` when testing a MariaDB connection
+- Limit PostgreSQL `ConnectTimeout` to `1024` seconds, the maximum `Npgsql` accepts
+
+### Removed
+
+- **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption
+- Remove `AutoIncrement` option from SQLite columns, it had no effect
 
 ## 0.32.0 - 2026-05-11
 

@@ -10,6 +10,7 @@ public class PostgreSqlExtensions_ConvertType
     [Theory]
     [InlineData(typeof(string), "text")]
     [InlineData(typeof(int), "integer")]
+    [InlineData(typeof(sbyte), "smallint")]
     [InlineData(typeof(double), "double precision")]
     [InlineData(typeof(byte[]), "bytea")]
     [InlineData(typeof(DateTime), "timestamp without time zone")]

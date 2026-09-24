@@ -41,7 +41,6 @@ Nodes:
         Properties         :
           - Id             : Filename
             Required       : true
-          - Id             : Password
           - Id             : Pooling
       - Id                 : Other
         Properties         :
@@ -105,7 +104,6 @@ Nodes:
         Properties         :
           - Id             : NotNull
           - Id             : PrimaryKey
-          - Id             : AutoIncrement
 
   - Id                     : ColumnFloat
     MappingId              : Column
@@ -268,12 +266,6 @@ Properties:
     DataType    : String
     UiControl   : TextBox
 
-  - Id          : Password
-    Name        : "Password"
-    Description : "The password"
-    DataType    : String
-    UiControl   : PasswordBox
-
   - Id          : BulkSize
     Name        : "Bulk size"
     Description : "The number of rows to be transferred in one bulk."
@@ -311,19 +303,12 @@ Properties:
     UiControl   : ToggleButton
     DefaultValue: false
 
-  - Id          : AutoIncrement
-    Name        : "Auto increment"
-    Description : "States if the column can auto increment"
-    DataType    : Bool
-    UiControl   : ToggleButton
-    DefaultValue: false
-
   - Id          : Pooling
     Name        : "Pooling"
     Description : "Indicating whether the connection will be pooled"
     DataType    : Bool
     UiControl   : ToggleButton
-    DefaultValue: false
+    DefaultValue: true
 
 Icons:
 

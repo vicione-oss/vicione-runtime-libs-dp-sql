@@ -8,19 +8,7 @@ public sealed class MariaDbConnectionTester : IDataPortConnectionTester<MySqlDat
 {
     public static async Task TestConnectionAsync(MySqlDataPortCommunication communication)
     {
-        MySqlDataPortProperties properties = new(communication);
-        MySqlConnectionStringBuilder builder = new()
-        {
-            Server = properties.Server,
-            Port = properties.Port,
-            Database = properties.Database,
-        };
-        if (properties.UserId is not null)
-            builder.UserID = properties.UserId;
-        if (properties.Password is not null)
-            builder.Password = properties.Password;
-
-        using var connection = new MySqlConnection(builder.ConnectionString);
+        using var connection = new MySqlConnection(communication.ToConnectionString());
 
         try
         {

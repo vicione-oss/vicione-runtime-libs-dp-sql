@@ -13,6 +13,7 @@ public class SqlServerExtensions_ConvertType
     [Theory]
     [InlineData(typeof(string), "Text")]
     [InlineData(typeof(int), "Int")]
+    [InlineData(typeof(sbyte), "SmallInt")]
     [InlineData(typeof(double), "Float")]
     [InlineData(typeof(decimal), "decimal(38,30)")]
     [MemberData(nameof(GetNullableTypes))]

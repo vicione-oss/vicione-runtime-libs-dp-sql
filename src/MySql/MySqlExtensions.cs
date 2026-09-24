@@ -23,6 +23,7 @@ internal static class MySqlExtensions
         { typeof(TimeSpan), "time" },
         { typeof(Guid), "varchar(36)"},
         { typeof(byte), "tinyint unsigned" },
+        { typeof(sbyte), "tinyint" },
         { typeof(byte[]), "varbinary(8000)" },
         { typeof(char), "text" },
         { typeof(string), "text" },

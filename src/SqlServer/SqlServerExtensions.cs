@@ -25,6 +25,7 @@ internal static class SqlServerExtensions
         { typeof(TimeSpan), SqlDbType.Time },
         { typeof(Guid), SqlDbType.UniqueIdentifier },
         { typeof(byte), SqlDbType.TinyInt },
+        { typeof(sbyte), SqlDbType.SmallInt }, // SQL Server's tinyint is unsigned
         { typeof(byte[]), SqlDbType.VarBinary },
         { typeof(char), SqlDbType.Text },
         { typeof(string), SqlDbType.Text },

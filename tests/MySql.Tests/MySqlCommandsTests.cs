@@ -1,8 +1,43 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using AwesomeAssertions;
 using Xunit;
 
 namespace ViciOne.Suite.DataPort;
+
+public class MySqlCommands_ReadSchemaInfo
+{
+    [Theory]
+    [InlineData("varchar", 255, "varchar(255)")]
+    [InlineData("text", 65535, "text")]
+    public void Reads_varchar_with_its_length(string dataType, int length, string expectedType)
+    {
+        using var table = CreateSchemaTable(dataType, length);
+        using var reader = table.CreateDataReader();
+        reader.Read();
+
+        var schemaInfo = MySqlCommands.ReadSchemaInfo(reader);
+
+        schemaInfo.ColumnType.Should().Be(expectedType);
+    }
+
+    private static DataTable CreateSchemaTable(string dataType, int length)
+    {
+        DataTable table = new();
+        table.Columns.Add("schema", typeof(string));
+        table.Columns.Add("table", typeof(string));
+        table.Columns.Add("column", typeof(string));
+        table.Columns.Add("type", typeof(string));
+        table.Columns.Add("primary_key", typeof(bool));
+        table.Columns.Add("not_null", typeof(bool));
+        table.Columns.Add("auto_increment", typeof(bool));
+        table.Columns.Add("precision", typeof(byte));
+        table.Columns.Add("scale", typeof(byte));
+        table.Columns.Add("length", typeof(int));
+        table.Rows.Add("schema", "table", "id", dataType, true, true, false, null, null, length);
+        return table;
+    }
+}
 
 public class MySqlCommands_ComposeCreateTableCommandText
 {

@@ -18,6 +18,7 @@
 ### Fixed
 
 - **Breaking:** Store `Int8` values in integer columns instead of JSON text in SQL DataPorts, existing tables with an `Int8` text column fail structure validation until the column is migrated or `DisableStructureValidation` is set
+- Apply `ConnectTimeout` when testing a MariaDB connection
 
 ### Removed
 

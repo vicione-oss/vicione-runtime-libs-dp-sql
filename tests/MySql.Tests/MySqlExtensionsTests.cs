@@ -26,6 +26,13 @@ public class MySqlExtensions_ConvertType
         result.Should().Be(dbTypeName.ToLower(CultureInfo.InvariantCulture));
     }
 
+    [Theory]
+    [InlineData(typeof(string), true, MySqlExtensions.StringPrimaryKeyType)]
+    [InlineData(typeof(string), false, "text")]
+    [InlineData(typeof(int), true, "int")]
+    public void Uses_varchar_only_for_string_primary_keys(Type type, bool primaryKey, string dbTypeName)
+        => MySqlExtensions.ConvertType(type, primaryKey).Should().Be(dbTypeName);
+
     public static TheoryData<Type, string> GetNullableTypes()
         => new()
         {
@@ -214,6 +221,41 @@ public class MySqlExtensions_Unify_Nodes
             .Tables.Should().ContainSingle().Which
             .Columns.Should().ContainSingle().Which;
         column.NotNull.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Creates_string_PrimaryKey_as_varchar()
+    {
+        Node schemaNode = new()
+        {
+            Id = Guid.NewGuid(),
+            DesignId = RelationalDatabaseNodeDesignId.SchemaNodeId,
+            Name = "schema",
+        };
+        Node tableNode = new()
+        {
+            Id = Guid.NewGuid(),
+            ParentId = schemaNode.Id,
+            DesignId = RelationalDatabaseNodeDesignId.TableNodeId,
+            Name = "table",
+        };
+        Node columnNode = new()
+        {
+            Id = Guid.NewGuid(),
+            ParentId = tableNode.Id,
+            DesignId = RelationalDatabaseNodeDesignId.ColumnNodeId,
+            Properties = new() { { RelationalDatabaseNodeProperty.PrimaryKey, new() { Value = true, } } },
+            Name = "id",
+            ValueType = typeof(string),
+        };
+        var nodes = new[] { schemaNode, tableNode, columnNode, };
+
+        var schemas = MySqlExtensions.Unify(nodes);
+
+        var column = schemas.Should().ContainSingle().Which
+            .Tables.Should().ContainSingle().Which
+            .Columns.Should().ContainSingle().Which;
+        column.Type.Should().Be(MySqlExtensions.StringPrimaryKeyType);
     }
 }
 

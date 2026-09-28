@@ -21,11 +21,13 @@
 - **Breaking:** Store `Int8` values in integer columns instead of JSON text in SQL DataPorts, existing tables with an `Int8` text column fail structure validation until the column is migrated or `DisableStructureValidation` is set
 - Apply `ConnectTimeout` when testing a MariaDB connection
 - Limit PostgreSQL `ConnectTimeout` to `1024` seconds, the maximum `Npgsql` accepts
+- Create string primary keys as `varchar(255)` in MySQL and MariaDB and as `nvarchar(450)` in SQL Server, a `text` column cannot be a key
 
 ### Removed
 
 - **Breaking:** Remove `Password` from the SQLite DataPort, the bundled SQLite library does not support encryption
 - Remove `AutoIncrement` option from SQLite columns, it had no effect
+- **Breaking:** Remove `PrimaryKey` option from binary and JSON columns in SQL DataPorts, most databases cannot use these column types as keys
 
 ## 0.32.0 - 2026-05-11
 

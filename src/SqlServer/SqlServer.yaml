@@ -236,7 +236,6 @@ Nodes:
       - Id                 : Other
         Properties         :
         - Id               : NotNull
-        - Id               : PrimaryKey
 
   - Id                     : ColumnJSON
     MappingId              : Column
@@ -252,7 +251,6 @@ Nodes:
       - Id                 : Other
         Properties         :
         - Id               : NotNull
-        - Id               : PrimaryKey
     ChildNodes             :
       - Id                 : JsonObject
       - Id                 : JsonBool
@@ -388,7 +386,7 @@ Properties:
 
   - Id          : PrimaryKey
     Name        : "Primary key"
-    Description : "States if the column is a primary key"
+    Description : "States if the column is a primary key. String keys are limited to 450 characters."
     DataType    : Bool
     UiControl   : ToggleButton
     DefaultValue: false

@@ -171,7 +171,6 @@ Nodes:
       - Id                 : Other
         Properties         :
           - Id             : NotNull
-          - Id             : PrimaryKey
 
   - Id                     : ColumnJSON
     MappingId              : Column
@@ -187,7 +186,6 @@ Nodes:
       - Id                 : Other
         Properties         :
           - Id             : NotNull
-          - Id             : PrimaryKey
     ChildNodes             :
       - Id                 : JsonObject
       - Id                 : JsonBool

@@ -7,6 +7,9 @@ namespace ViciOne.Suite.DataPort;
 
 internal static class MySqlExtensions
 {
+    // A text column can only be a key with a prefix length; 255 utf8mb4 characters stay below the 3072-byte InnoDB key limit.
+    internal const string StringPrimaryKeyType = "varchar(255)";
+
     private static readonly Dictionary<Type, string> s_typeMapping = new()
     {
         { typeof(bool), "bool" },
@@ -36,6 +39,9 @@ internal static class MySqlExtensions
     internal static string ConvertType(Type type)
         => s_typeMapping.TryGetValue(Nullable.GetUnderlyingType(type) ?? type, out var dbType) ? dbType : "Text";
 
+    internal static string ConvertType(Type type, bool primaryKey)
+        => primaryKey && type == typeof(string) ? StringPrimaryKeyType : ConvertType(type);
+
     internal static IReadOnlyCollection<Schema> Unify(this IReadOnlyCollection<INode> nodes)
     {
         var schemaNodes = nodes.Where(n => n.DesignId == RelationalDatabaseNodeDesignId.SchemaNodeId);
@@ -58,7 +64,7 @@ internal static class MySqlExtensions
                     var notNull = column.GetPropertyValueOrDefault(RelationalDatabaseNodeProperty.NotNull, false) || primaryKey || autoIncrement;
                     columns.Add(new(
                         column.Name,
-                        ConvertType(isJsonColumn ? typeof(JsonNode) : column.ValueType ?? throw new InvalidOperationException("The column must have a type.")),
+                        ConvertType(isJsonColumn ? typeof(JsonNode) : column.ValueType ?? throw new InvalidOperationException("The column must have a type."), primaryKey),
                         primaryKey,
                         notNull,
                         autoIncrement));

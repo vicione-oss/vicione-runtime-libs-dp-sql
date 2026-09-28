@@ -18,7 +18,8 @@ internal static class MySqlCommands
         CASE WHEN IS_NULLABLE = 'NO' THEN true ELSE false END AS "not_null",
         CASE WHEN EXTRA LIKE '%auto_increment%' THEN true ELSE false END AS "auto_increment",
         NUMERIC_PRECISION as "precision", 
-        NUMERIC_SCALE as "scale"
+        NUMERIC_SCALE as "scale",
+        CHARACTER_MAXIMUM_LENGTH as "length"
     FROM information_schema.columns 
     WHERE TABLE_SCHEMA != 'information_schema' AND TABLE_SCHEMA != 'mysql' AND TABLE_SCHEMA != 'sys' AND TABLE_SCHEMA != 'performance_schema'
     """;
@@ -42,6 +43,7 @@ internal static class MySqlCommands
         {
             "decimal" => $"{dataType}({reader.GetFieldValue<byte>(7)},{reader.GetFieldValue<byte>(8)})",
             "varbinary" => $"{dataType}(8000)",
+            "varchar" => $"{dataType}({reader.GetFieldValue<int>(9)})",
             _ => dataType,
         };
 

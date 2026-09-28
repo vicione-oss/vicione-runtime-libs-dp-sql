@@ -221,6 +221,31 @@ public class MariaDbDataPortOutgoing_Interoperability(MariaDbTestSystem mariaDb)
         await connection.CloseAsync();
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Can_reconnect_to_a_table_with_a_string_PrimaryKey()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ReconnectDB")
+            .AddSchema("ReconnectSchema")
+            .AddTable("machines")
+            .AddColumn("id", typeof(string), primaryKey: true)
+            .Create();
+        var data = RelationalDatabaseTestHelper.CreateTestData(tree, "machine-1", typeof(string));
+        var communication = mariaDb.Communication with { Nodes = tree, };
+        using (var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>()))
+        {
+            await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+            await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
+            await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+        }
+        using var reconnected = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        var act = () => reconnected.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().NotThrowAsync();
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

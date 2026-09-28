@@ -35,7 +35,7 @@ public class SqlServerDataPortOutgoingBenchmark : ISqlThroughput, IDisposable
             Host = "",
             Port = 1433,
             Database = "",
-            UserID = "",
+            UserId = "",
             Password = "",
         };
         _communication = new(communication, _loggerFactory.CreateLogger<SqlServerDataPortOutgoing>());

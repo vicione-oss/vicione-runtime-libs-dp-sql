@@ -19,7 +19,7 @@ public sealed class SqlServerTestSystem : IAsyncLifetime
         SqlConnectionStringBuilder connectionString = new(_container.GetConnectionString());
         Communication.Host = connectionString.DataSource;
         Communication.Database = connectionString.InitialCatalog;
-        Communication.UserID = connectionString.UserID;
+        Communication.UserId = connectionString.UserID;
         Communication.Password = connectionString.Password;
     }
 

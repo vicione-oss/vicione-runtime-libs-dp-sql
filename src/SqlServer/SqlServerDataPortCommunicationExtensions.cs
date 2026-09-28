@@ -14,8 +14,8 @@ internal static class SqlServerDataPortCommunicationExtensions
             TrustServerCertificate = true,
             ConnectTimeout = communication.ConnectTimeout,
         };
-        if (properties.UserID is not null)
-            builder.UserID = properties.UserID;
+        if (properties.UserId is not null)
+            builder.UserID = properties.UserId;
         if (properties.Password is not null)
             builder.Password = properties.Password;
         return builder.ToString();

@@ -12,7 +12,7 @@ namespace ViciOne.Suite.DataPort;
 
 internal abstract class SqlServerRelationalDatabase(SqlServerDataPortCommunication communication, ILogger logger) : RelationalDatabase(communication, logger, 128)
 {
-    internal const string SingleDatabaseInstanceNodeId = "SqlServer-SingleDatabaseInstance";
+    internal const string SingleDatabaseInstanceNodeId = "SqlServerSingleDatabaseInstance";
 
     protected readonly SqlServerDataPortCommunication _communication = communication;
     protected readonly ILogger _logger = logger;

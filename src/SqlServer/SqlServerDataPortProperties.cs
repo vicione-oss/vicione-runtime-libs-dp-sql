@@ -20,10 +20,10 @@ internal sealed class SqlServerDataPortProperties(SqlServerDataPortCommunication
         set => communication.Database = value;
     }
 
-    internal string? UserID
+    internal string? UserId
     {
-        get => communication.UserID;
-        set => communication.UserID = value;
+        get => communication.UserId;
+        set => communication.UserId = value;
     }
 
     internal string? Password

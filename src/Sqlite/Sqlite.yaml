@@ -9,12 +9,12 @@ Common:
   Namespace    : "ViciOne.DataPort.Sqlite"                                                         # required: Namespace of the DataPort
 
 Root:
-  Id                       : "SQLiteDataPort"                                                      # required: Id String to identify the root of the DataPort
+  Id                       : "SqliteDataPort"                                                      # required: Id String to identify the root of the DataPort
   Name                     : "SQLite"                                                              # required: display name of the DataPort
   Description              : "DataPort for SQLite database"                                        # required: display description of the DataPort
   Icon                     : sqlite                                                                # required: just one Icon for the DataPort
   ChildNodes               :
-    - Id                   : SQLite-Database
+    - Id                   : SqliteInstance
       MaxDepth             : 64
       MaxInstances         : 8
 
@@ -22,10 +22,10 @@ Nodes:
 
   # -------------------- Database ---------------------------------------
 
-  - Id                     : SQLite-Database
+  - Id                     : SqliteInstance
     Type                   : DataPortNode
     Name                   : "Database"
-    Description            : "Database"
+    Description            : "Connection to one SQLite database file"
     MetadataLength         : 0
     Icon                   : database
     TransferDirections     : [ Outbound ]
@@ -259,21 +259,21 @@ PropertyCategories:
 
 Properties:
   - Id          : Filename
-    Name        : "Filename"
+    Name        : "File name"
     Description : "Path to the database file"
     DataType    : String
     UiControl   : TextBox
 
   - Id          : BulkSize
     Name        : "Bulk size"
-    Description : "The number of rows to be transferred in one bulk."
+    Description : "The maximum number of rows written in one batch. The default of 10000 keeps round trips low without holding too many rows in memory or in a single transaction."
     DataType    : Int32
     UiControl   : NumericUpDown
     MinValue    : 1
     DefaultValue: 10000
 
   - Id          : MinimumPublishIntervalInMs
-    Name        : "Minimum publish interval"
+    Name        : "Minimum publish interval (ms)"
     Description : "The minimum time interval between two data transfers in milliseconds."
     DataType    : UInt32
     UiControl   : NumericUpDown
@@ -284,28 +284,28 @@ Properties:
     Name        : "Disable structure validation"
     Description : "Skips automatic table validation and creation. Only use with pre-validated or trusted node names."
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : PrimaryKey
     Name        : "Primary key"
     Description : "States if the column is a primary key"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : NotNull
     Name        : "Not null"
     Description : "States if the column is not allowed to be null"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : Pooling
     Name        : "Pooling"
-    Description : "Indicating whether the connection will be pooled"
+    Description : "Reuses open connections to the database file instead of opening a new one for every transfer"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: true
 
 Icons:

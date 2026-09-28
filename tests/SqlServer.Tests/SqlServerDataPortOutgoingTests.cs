@@ -171,7 +171,7 @@ public class SqlServerDataPortOutgoing_
             {
                 DataSource = $"{communication.Host},{communication.Port}",
                 Password = communication.Password,
-                UserID = communication.UserID,
+                UserID = communication.UserId,
                 InitialCatalog = tree.First(t => t.DesignId == RelationalDatabaseNodeDesignId.DatabaseNodeId).Name,
                 TrustServerCertificate = true
             };
@@ -242,7 +242,7 @@ public class SqlServerDataPortOutgoing_
             {
                 DataSource = $"{communication.Host},{communication.Port}",
                 Password = communication.Password,
-                UserID = communication.UserID,
+                UserID = communication.UserId,
                 InitialCatalog = tree.First(t => t.DesignId == RelationalDatabaseNodeDesignId.DatabaseNodeId).Name,
                 TrustServerCertificate = true
             };

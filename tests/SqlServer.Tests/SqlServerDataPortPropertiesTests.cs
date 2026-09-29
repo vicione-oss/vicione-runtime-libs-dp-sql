@@ -102,15 +102,15 @@ public class SqlServerDataPortProperties_Database
     };
 }
 
-public class SqlServerDataPortProperties_UserID
+public class SqlServerDataPortProperties_UserId
 {
     [Theory]
     [MemberData(nameof(Conversion))]
     public void Getter_returns_value(string? value)
     {
-        SqlServerDataPortProperties properties = new(new() { UserID = value, });
+        SqlServerDataPortProperties properties = new(new() { UserId = value, });
 
-        properties.UserID.Should().Be(value);
+        properties.UserId.Should().Be(value);
     }
 
     [Theory]
@@ -122,10 +122,10 @@ public class SqlServerDataPortProperties_UserID
 
         _ = new SqlServerDataPortProperties(communication)
         {
-            UserID = value,
+            UserId = value,
         };
 
-        communication.UserID.Should().Be(value);
+        communication.UserId.Should().Be(value);
     }
 
     public static TheoryData<string?> Conversion() => new()

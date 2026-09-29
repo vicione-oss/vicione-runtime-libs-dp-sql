@@ -14,7 +14,7 @@ Root:
   Description              : "DataPort for MariaDB"                                                # required: display description of the DataPort
   Icon                     : mariadb                                                               # required: just one Icon for the DataPort
   ChildNodes               :
-    - Id                   : MariaDb-Database
+    - Id                   : MariaDbInstance
       MaxDepth             : 64
       MaxInstances         : 8
 
@@ -22,10 +22,10 @@ Nodes:
 
   # -------------------- Database -----------------------------------------
 
-  - Id                     : MariaDb-Database
+  - Id                     : MariaDbInstance
     Type                   : DataPortNode
     Name                   : "Database"
-    Description            : "Database"
+    Description            : "Connection to one MariaDB database"
     MetadataLength         : 0
     Icon                   : database
     TransferDirections     : [ Outbound ]
@@ -301,7 +301,7 @@ Properties:
 
   - Id          : Port
     Name        : "Port"
-    Description : "The port of the database server"
+    Description : "The TCP port of the database server"
     DataType    : UInt16
     UiControl   : NumericUpDown
     MinValue    : 1
@@ -315,26 +315,26 @@ Properties:
 
   - Id          : UserId
     Name        : "User name"
-    Description : "The user name"
+    Description : "The database user to sign in with"
     DataType    : StringLength32
     UiControl   : TextBox
 
   - Id          : Password
     Name        : "Password"
-    Description : "The password"
+    Description : "The password of the database user"
     DataType    : String
     UiControl   : PasswordBox
 
   - Id          : BulkSize
     Name        : "Bulk size"
-    Description : "The number of rows to be transferred in one bulk."
+    Description : "The maximum number of rows written in one batch. The default of 10000 keeps round trips low without holding too many rows in memory or in a single transaction."
     DataType    : Int32
     UiControl   : NumericUpDown
     MinValue    : 1
     DefaultValue: 10000
 
   - Id          : MinimumPublishIntervalInMs
-    Name        : "Minimum publish interval"
+    Name        : "Minimum publish interval (ms)"
     Description : "The minimum time interval between two data transfers in milliseconds."
     DataType    : UInt32
     UiControl   : NumericUpDown
@@ -342,7 +342,7 @@ Properties:
     DefaultValue: 1000
 
   - Id          : ConnectTimeout
-    Name        : "Connect timeout"
+    Name        : "Connect timeout (s)"
     Description : "The time in seconds to wait for a connection to open. Increase this value when connecting to slow or remote servers."
     DataType    : Int32
     UiControl   : NumericUpDown
@@ -353,28 +353,28 @@ Properties:
     Name        : "Disable structure validation"
     Description : "Skips automatic schema/table validation and creation. Only use with pre-validated or trusted node names."
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : PrimaryKey
     Name        : "Primary key"
     Description : "States if the column is a primary key. String keys are limited to 255 characters."
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : NotNull
     Name        : "Not null"
     Description : "States if the column is not allowed to be null"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : AutoIncrement
     Name        : "Auto increment"
     Description : "States if the column can auto increment"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
 Icons:

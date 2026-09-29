@@ -14,10 +14,10 @@ Root:
   Description              : "DataPort for SQL Server"                                             # required: display description of the DataPort
   Icon                     : sql-server                                                            # required: just one Icon for the DataPort
   ChildNodes               :
-    - Id                   : SqlServer-Instance
+    - Id                   : SqlServerInstance
       MaxDepth             : 64
       MaxInstances         : 8
-    - Id                   : SqlServer-SingleDatabaseInstance
+    - Id                   : SqlServerSingleDatabaseInstance
       MaxDepth             : 64
       MaxInstances         : 8
 
@@ -25,10 +25,10 @@ Nodes:
 
   # -------------------- Instance -----------------------------------------
 
-  - Id                     : SqlServer-Instance
+  - Id                     : SqlServerInstance
     Type                   : DataPortNode
     Name                   : "Connection"
-    Description            : "Connection"
+    Description            : "Connection to a SQL Server instance with any number of databases"
     MetadataLength         : 0
     Icon                   : server
     TransferDirections     : [ Outbound ]
@@ -43,7 +43,7 @@ Nodes:
           - Id             : ConnectTimeout
       - Id                 : Authentication
         Properties         :
-          - Id             : UserID
+          - Id             : UserId
           - Id             : Password
       - Id                 : Other
         Properties         :
@@ -53,10 +53,10 @@ Nodes:
 
   # -------------------- SingleDatabaseInstance ---------------------------
 
-  - Id                     : SqlServer-SingleDatabaseInstance
+  - Id                     : SqlServerSingleDatabaseInstance
     Type                   : DataPortNode
-    Name                   : "Single Database Connection"
-    Description            : "Single Database Connection"
+    Name                   : "Single database connection"
+    Description            : "Connection limited to one existing database, which is never created automatically"
     MetadataLength         : 0
     Icon                   : server
     TransferDirections     : [ Outbound ]
@@ -72,7 +72,7 @@ Nodes:
           - Id             : ConnectTimeout
       - Id                 : Authentication
         Properties         :
-          - Id             : UserID
+          - Id             : UserId
           - Id             : Password
       - Id                 : Other
         Properties         :
@@ -335,7 +335,7 @@ Properties:
 
   - Id          : Port
     Name        : "Port"
-    Description : "The port for TCP."
+    Description : "The TCP port (default 1433). Clear it to reach a named instance through the SQL Server Browser."
     DataType    : UInt16
     UiControl   : NumericUpDown
     MinValue    : 1
@@ -343,14 +343,14 @@ Properties:
 
   - Id          : BulkSize
     Name        : "Bulk size"
-    Description : "The number of rows to be transferred in one bulk."
+    Description : "The maximum number of rows written in one batch. The default of 10000 keeps round trips low without holding too many rows in memory or in a single transaction."
     DataType    : Int32
     UiControl   : NumericUpDown
     MinValue    : 1
     DefaultValue: 10000
 
   - Id          : MinimumPublishIntervalInMs
-    Name        : "Minimum publish interval"
+    Name        : "Minimum publish interval (ms)"
     Description : "The minimum time interval between two data transfers in milliseconds."
     DataType    : UInt32
     UiControl   : NumericUpDown
@@ -358,7 +358,7 @@ Properties:
     DefaultValue: 1000
 
   - Id          : ConnectTimeout
-    Name        : "Connect timeout"
+    Name        : "Connect timeout (s)"
     Description : "The time in seconds to wait for a connection to open. Increase this value when connecting to slow or remote servers."
     DataType    : Int32
     UiControl   : NumericUpDown
@@ -369,18 +369,18 @@ Properties:
     Name        : "Disable structure validation"
     Description : "Skips automatic schema/table validation and creation. Only use with pre-validated or trusted node names."
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
-  - Id          : UserID
-    Name        : "User ID"
-    Description : "The user ID"
+  - Id          : UserId
+    Name        : "User name"
+    Description : "The SQL Server login to sign in with"
     DataType    : String
     UiControl   : TextBox
 
   - Id          : Password
     Name        : "Password"
-    Description : "The password"
+    Description : "The password of the SQL Server login"
     DataType    : String
     UiControl   : PasswordBox
 
@@ -388,21 +388,21 @@ Properties:
     Name        : "Primary key"
     Description : "States if the column is a primary key. String keys are limited to 450 characters."
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : NotNull
     Name        : "Not null"
     Description : "States if the column is not allowed to be null"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
   - Id          : AutoIncrement
     Name        : "Auto increment"
     Description : "States if the column can auto increment"
     DataType    : Bool
-    UiControl   : ToggleButton
+    UiControl   : CheckBox
     DefaultValue: false
 
 Icons:

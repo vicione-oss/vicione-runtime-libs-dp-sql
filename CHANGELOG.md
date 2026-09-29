@@ -9,6 +9,11 @@
 - Rename the company to `ViciOne open automation gmbh` in the package metadata, the license and the `Author` of the `.yaml` files
 - Default SQLite `Pooling` to `true`, matching `Microsoft.Data.Sqlite`
 - Default `MinimumPublishIntervalInMs` to `1000` when a SQL DataPort configuration omits it, matching the `.yaml` default
+- **Breaking:** Rename the SQLite root Id `SQLiteDataPort` to `SqliteDataPort`, existing configurations must be recreated
+- **Breaking:** Rename the connection node Ids to `SqliteInstance`, `MySqlInstance`, `MariaDbInstance`, `PostgreSqlInstance`, `SqlServerInstance` and `SqlServerSingleDatabaseInstance`, existing configurations must be recreated
+- **Breaking:** Rename the SQL Server property `UserID` to `UserId`, matching the other SQL DataPorts
+- Show boolean properties as check boxes and the unit in the timeout and publish interval names
+- Describe the connection properties and the `BulkSize` default more precisely in the `.yaml` files
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.TreeBuilder` to `2.1.0`

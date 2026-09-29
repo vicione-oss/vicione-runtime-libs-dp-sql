@@ -20,8 +20,8 @@ public class SqlServerDataPortCommunicationExtensions_ToConnectionString
         => CreateCommunication(c => c.Port = 1234).ToConnectionString().Should().Contain("Data Source=host,1234;");
 
     [Fact]
-    public void Sets_UserID_if_available()
-        => CreateCommunication(c => c.UserID = "user").ToConnectionString().Should().Contain("User ID=user");
+    public void Sets_UserId_if_available()
+        => CreateCommunication(c => c.UserId = "user").ToConnectionString().Should().Contain("User ID=user");
 
     [Fact]
     public void Sets_Password_if_available()

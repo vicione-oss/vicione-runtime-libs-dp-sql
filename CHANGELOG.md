@@ -5,7 +5,7 @@
 ### Changed
 
 - Add new icons to DataPorts
-- Update `.yaml` files format to `2.0.0` (`ViciOne.TreeBuilder`)
+- Update `.yaml` files format to `2.0.0` (`ViciOne.Tree.Builder`)
 - Rename the company to `ViciOne open automation gmbh` in the package metadata, the license and the `Author` of the `.yaml` files
 - Default SQLite `Pooling` to `true`, matching `Microsoft.Data.Sqlite`
 - Default `MinimumPublishIntervalInMs` to `1000` when a SQL DataPort configuration omits it, matching the `.yaml` default
@@ -16,7 +16,7 @@
 - Describe the connection properties and the `BulkSize` default more precisely in the `.yaml` files
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
-- Update `ViciOne.TreeBuilder` to `2.1.0`
+- Update `ViciOne.Tree.Builder` to `3.0.0`
 - Update `Microsoft.Data.SqlClient` to `7.1.0`
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`

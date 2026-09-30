@@ -19,7 +19,7 @@
     <PackageVersion Include="Testcontainers.MySql" Version="4.15.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
     <PackageVersion Include="ViciOne.ManagedEngine" Version="1.0.0" />
-    <PackageVersion Include="ViciOne.Suite.DataPort" Version="0.32.0" />
+    <PackageVersion Include="ViciOne.Suite.DataPort" Version="1.0.0" />
     <PackageVersion Include="ViciOne.Tree.Builder" Version="3.0.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
   </ItemGroup>

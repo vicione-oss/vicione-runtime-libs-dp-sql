@@ -20,6 +20,7 @@
 - Update `Microsoft.Data.SqlClient` to `7.1.0`
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`
+- Update `ViciOne.Suite.DataPort` to `1.0.0`
 
 ### Fixed
 

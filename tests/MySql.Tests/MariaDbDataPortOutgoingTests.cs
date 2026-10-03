@@ -246,6 +246,30 @@ public class MariaDbDataPortOutgoing_Interoperability(MariaDbTestSystem mariaDb)
         await act.Should().NotThrowAsync();
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Writes_again_after_the_server_closed_the_connection_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ReconnectDB")
+            .AddSchema("KilledConnectionSchema")
+            .AddTable("measurements")
+            .AddColumn("value", typeof(int))
+            .Create();
+        var communication = mariaDb.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int)), TestContext.Current.CancellationToken);
+        await MySqlTestQueries.WaitForRowsAsync(communication, "KilledConnectionSchema", "measurements", 1, TestContext.Current.CancellationToken);
+        await MySqlTestQueries.KillOtherConnectionsAsync(communication, TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 2, typeof(int)), TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.WaitForRowsAsync(communication, "KilledConnectionSchema", "measurements", 2, TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+        rows.Select(r => r[0]).Should().Equal(1, 2);
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

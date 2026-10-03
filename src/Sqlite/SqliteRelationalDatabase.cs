@@ -69,6 +69,7 @@ internal sealed class SqliteRelationalDatabase(SqliteDataPortCommunication commu
         catch (Exception ex)
         {
             _logger.PublishFailed(ex);
+            await AdoDotNetFunctions.CloseBrokenConnectionAsync(_connection).ConfigureAwait(false);
             return false;
         }
 

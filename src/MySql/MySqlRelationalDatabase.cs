@@ -79,6 +79,7 @@ internal sealed class MySqlRelationalDatabase(MySqlDataPortCommunication communi
         catch (Exception ex)
         {
             _logger.PublishFailed(ex);
+            await AdoDotNetFunctions.CloseBrokenConnectionAsync(_connection).ConfigureAwait(false);
             return false;
         }
 

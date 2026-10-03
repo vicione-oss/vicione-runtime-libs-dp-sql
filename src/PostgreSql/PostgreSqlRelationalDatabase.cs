@@ -81,6 +81,7 @@ internal sealed class PostgreSqlRelationalDatabase(PostgreSqlDataPortCommunicati
         catch (Exception ex)
         {
             _logger.PublishFailed(ex);
+            await AdoDotNetFunctions.CloseBrokenConnectionAsync(_connection).ConfigureAwait(false);
 
             return false;
         }

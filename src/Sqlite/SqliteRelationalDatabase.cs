@@ -92,7 +92,7 @@ internal sealed class SqliteRelationalDatabase(SqliteDataPortCommunication commu
                 command.Parameters.Clear();
 
                 foreach (var column in columns)
-                    command.Parameters.Add(new(column.Name, row.Columns.GetValueOrDefault(column) ?? DBNull.Value));
+                    command.Parameters.Add(new(column.Name, SqliteExtensions.ToDatabaseValue(column, row.Columns.GetValueOrDefault(column)) ?? DBNull.Value));
 
                 await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }

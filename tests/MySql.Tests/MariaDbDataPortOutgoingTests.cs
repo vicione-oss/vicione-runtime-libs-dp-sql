@@ -358,6 +358,28 @@ public class MariaDbDataPortOutgoing_Interoperability(MariaDbTestSystem mariaDb)
         await redeployed.DisconnectAsync(TestContext.Current.CancellationToken);
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Keeps_the_microseconds_of_a_DateTime_Async()
+    {
+        var value = new DateTime(2026, 10, 3, 6, 0, 0, DateTimeKind.Utc).AddTicks(1_234_560);
+        var tree = new SqlTreeCreator()
+            .AddDb("DateTimeDB")
+            .AddSchema("DateTimeSchema")
+            .AddTable("times")
+            .AddColumn("value", typeof(DateTime))
+            .Create();
+        var communication = mariaDb.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, value, typeof(DateTime)), TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "DateTimeSchema", "times", TestContext.Current.CancellationToken);
+        rows.Should().ContainSingle().Which[0].Should().BeOfType<DateTime>().Which.Ticks.Should().Be(value.Ticks);
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

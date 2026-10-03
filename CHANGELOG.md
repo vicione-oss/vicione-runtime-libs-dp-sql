@@ -14,6 +14,7 @@
 - **Breaking:** Rename the SQL Server property `UserID` to `UserId`, matching the other SQL DataPorts
 - Show boolean properties as check boxes and the unit in the timeout and publish interval names
 - Describe the connection properties and the `BulkSize` default more precisely in the `.yaml` files
+- Describe how SQL DataPorts write rows and which value ranges each database stores in the README
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.Tree.Builder` to `3.0.0`
@@ -33,6 +34,9 @@
 - Write `UInt16`, `UInt32` and `UInt64` columns to PostgreSQL, a `UInt64` above `Int64.MaxValue` is rejected with an error naming the column
 - Accept an existing MySQL or MariaDB database without tables instead of failing the deploy with `database exists`
 - Accept MySQL and MariaDB tables the DataPort created itself on the next deploy, `Bool`, unsigned integer and MariaDB JSON columns were reported as breaking changes
+- Keep microseconds of `DateTime` values in new MySQL and MariaDB tables by creating `datetime(6)` columns, existing `datetime` columns are still accepted
+- Reject `UInt64` values above `Int64.MaxValue`, NUL characters and strings containing one in SQLite instead of storing them changed
+- Store `DateTime.MinValue` and `DateTime.MaxValue` as the first and last microsecond PostgreSQL holds instead of `-infinity` and `infinity`
 
 ### Removed
 

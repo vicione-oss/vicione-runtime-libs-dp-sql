@@ -22,7 +22,7 @@ internal static class MySqlExtensions
         { typeof(float), "float" },
         { typeof(double), "double" },
         { typeof(decimal), "decimal(65,30)" },
-        { typeof(DateTime), "datetime" },
+        { typeof(DateTime), "datetime(6)" },
         { typeof(TimeSpan), "time" },
         { typeof(Guid), "varchar(36)"},
         { typeof(byte), "tinyint unsigned" },

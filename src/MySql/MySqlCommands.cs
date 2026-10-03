@@ -35,7 +35,8 @@ internal static partial class MySqlCommands
             reader.GetFieldValue<bool>(6));
 
     // Brings COLUMN_TYPE to the names MySqlExtensions creates columns with: bool is stored as tinyint(1),
-    // MariaDB reports integer display widths and stores json as longtext.
+    // MariaDB reports integer display widths and stores json as longtext. A datetime column is accepted where
+    // datetime(6) is expected, it only stores whole seconds.
     [SuppressMessage("Globalization", "CA1308:Zeichenfolgen in Großbuchstaben normalisieren")]
     internal static string NormalizeColumnType(string columnType)
     {
@@ -45,6 +46,7 @@ internal static partial class MySqlCommands
         {
             "tinyint(1)" => "bool",
             "longtext" => "json",
+            "datetime" => "datetime(6)",
             _ => IntegerDisplayWidth().Replace(type, "$1"),
         };
     }

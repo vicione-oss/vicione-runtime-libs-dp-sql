@@ -409,3 +409,26 @@ public class PostgreSqlExtensions_ToDatabaseValue
             { (ulong)long.MaxValue, long.MaxValue },
         };
 }
+
+public class PostgreSqlExtensions_ToDatabaseValue_DateTime
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "time", false, false, typeof(DateTime));
+
+    [Fact]
+    public void Clamps_the_maximum_DateTime_to_the_last_microsecond()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc)).Should()
+            .BeOfType<DateTime>().Which.Should().Be(new DateTime(9999, 12, 31, 23, 59, 59, 999, 999, DateTimeKind.Utc)).And.BeIn(DateTimeKind.Utc);
+
+    [Fact]
+    public void Clamps_the_minimum_DateTime_to_the_first_microsecond()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, default(DateTime)).Should()
+            .BeOfType<DateTime>().Which.Should().Be(new DateTime(1, 1, 1, 0, 0, 0, 0, 1));
+
+    [Fact]
+    public void Keeps_a_DateTime_within_the_timestamp_range()
+    {
+        var value = new DateTime(2026, 10, 3, 6, 0, 0, DateTimeKind.Utc).AddTicks(1_234_567);
+
+        PostgreSqlExtensions.ToDatabaseValue(s_column, value).Should().Be(value);
+    }
+}

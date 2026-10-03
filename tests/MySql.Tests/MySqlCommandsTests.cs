@@ -68,6 +68,8 @@ public class MySqlCommands_NormalizeColumnType
     [InlineData("varbinary(8000)", "varbinary(8000)")]
     [InlineData("decimal(65,30)", "decimal(65,30)")]
     [InlineData("TEXT", "text")]
+    [InlineData("datetime", "datetime(6)")]
+    [InlineData("datetime(6)", "datetime(6)")]
     public void Matches_the_type_names_columns_are_created_with(string columnType, string expected)
         => MySqlCommands.NormalizeColumnType(columnType).Should().Be(expected);
 
@@ -88,6 +90,7 @@ public class MySqlCommands_NormalizeColumnType
     [InlineData(typeof(byte[]))]
     [InlineData(typeof(Guid))]
     [InlineData(typeof(TimeSpan))]
+    [InlineData(typeof(DateTime))]
     public void Keeps_the_created_type_name(Type type)
     {
         var created = MySqlExtensions.ConvertType(type);

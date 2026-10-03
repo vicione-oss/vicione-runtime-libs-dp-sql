@@ -296,6 +296,27 @@ public class MariaDbDataPortOutgoing_Interoperability(MariaDbTestSystem mariaDb)
         rows.Should().BeEquivalentTo<object?[]>([[1, "x"], [1, null], [null, "x"]], o => o.WithStrictOrdering());
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Creates_tables_in_an_existing_database_without_tables_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ExistingDB")
+            .AddSchema("EmptyMariaDbDatabase")
+            .AddTable("measurements")
+            .AddColumn("value", typeof(int))
+            .Create();
+        var communication = mariaDb.Communication with { Nodes = tree, };
+        await MySqlTestQueries.ExecuteAsync(communication, "CREATE DATABASE `EmptyMariaDbDatabase`;", TestContext.Current.CancellationToken);
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "EmptyMariaDbDatabase", "measurements", TestContext.Current.CancellationToken);
+        rows.Should().BeEmpty();
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

@@ -318,6 +318,27 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         rows.Should().BeEquivalentTo<object?[]>([[1, "x"], [1, null], [null, "x"]], o => o.WithStrictOrdering());
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Creates_tables_in_an_existing_database_without_tables_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ExistingDB")
+            .AddSchema("EmptyMySqlDatabase")
+            .AddTable("measurements")
+            .AddColumn("value", typeof(int))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        await MySqlTestQueries.ExecuteAsync(communication, "CREATE DATABASE `EmptyMySqlDatabase`;", TestContext.Current.CancellationToken);
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "EmptyMySqlDatabase", "measurements", TestContext.Current.CancellationToken);
+        rows.Should().BeEmpty();
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

@@ -9,19 +9,20 @@ namespace ViciOne.Suite.DataPort;
 internal static class MySqlCommands
 {
     private const string SelectAllSchemasWithInformation = """
-    SELECT 
-        TABLE_SCHEMA AS "schema",
-        TABLE_NAME AS "table",
-        COLUMN_NAME AS "column",
-        DATA_TYPE AS "type",
-        CASE WHEN COLUMN_KEY = 'PRI' THEN true ELSE false END AS "primary_key",
-        CASE WHEN IS_NULLABLE = 'NO' THEN true ELSE false END AS "not_null",
-        CASE WHEN EXTRA LIKE '%auto_increment%' THEN true ELSE false END AS "auto_increment",
-        NUMERIC_PRECISION as "precision", 
-        NUMERIC_SCALE as "scale",
-        CHARACTER_MAXIMUM_LENGTH as "length"
-    FROM information_schema.columns 
-    WHERE TABLE_SCHEMA != 'information_schema' AND TABLE_SCHEMA != 'mysql' AND TABLE_SCHEMA != 'sys' AND TABLE_SCHEMA != 'performance_schema'
+    SELECT
+        s.SCHEMA_NAME AS "schema",
+        c.TABLE_NAME AS "table",
+        c.COLUMN_NAME AS "column",
+        c.DATA_TYPE AS "type",
+        CASE WHEN c.COLUMN_KEY = 'PRI' THEN true ELSE false END AS "primary_key",
+        CASE WHEN c.IS_NULLABLE = 'NO' THEN true ELSE false END AS "not_null",
+        CASE WHEN c.EXTRA LIKE '%auto_increment%' THEN true ELSE false END AS "auto_increment",
+        c.NUMERIC_PRECISION as "precision",
+        c.NUMERIC_SCALE as "scale",
+        c.CHARACTER_MAXIMUM_LENGTH as "length"
+    FROM information_schema.schemata AS s
+    LEFT JOIN information_schema.columns AS c ON c.TABLE_SCHEMA = s.SCHEMA_NAME
+    WHERE s.SCHEMA_NAME NOT IN ('information_schema', 'mysql', 'sys', 'performance_schema')
     """;
 
     internal static SchemaInfo ReadSchemaInfo(DbDataReader reader)
@@ -80,7 +81,7 @@ internal static class MySqlCommands
     }
 
     internal static string ComposeCreateSchemaCommandText(Schema schema)
-        => $"CREATE SCHEMA {IdentifierQuoter.QuoteForMySql(schema.Name)};";
+        => $"CREATE SCHEMA IF NOT EXISTS {IdentifierQuoter.QuoteForMySql(schema.Name)};";
 
     internal static string ComposeCreateTableCommandText(Schema schema, Table table)
     {

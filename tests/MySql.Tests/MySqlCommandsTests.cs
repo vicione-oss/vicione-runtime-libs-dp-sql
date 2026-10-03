@@ -93,8 +93,8 @@ public class MySqlCommands_ComposeCreateStructureCommandText
         var missingTables = new List<Database>() { new(string.Empty, missingTablesSchemas), };
 
         MySqlCommands.ComposeCreateStructureCommandText(missingSchemas, missingTables).Should().Be("""
-        CREATE SCHEMA `test1`;
-        CREATE SCHEMA `test2`;
+        CREATE SCHEMA IF NOT EXISTS `test1`;
+        CREATE SCHEMA IF NOT EXISTS `test2`;
         CREATE TABLE `test1`.`table_name1` (
         `id` int,
         `name` text);

@@ -30,6 +30,7 @@
 - Create string primary keys as `varchar(255)` in MySQL and MariaDB and as `nvarchar(450)` in SQL Server, a `text` column cannot be a key
 - Reconnect SQL DataPorts after the database server closed the connection, MySQL and MariaDB stopped writing until the next redeploy
 - Write MySQL, MariaDB and SQLite batches whose rows carry different columns, missing columns are stored as `NULL`
+- Write `UInt16`, `UInt32` and `UInt64` columns to PostgreSQL, a `UInt64` above `Int64.MaxValue` is rejected with an error naming the column
 
 ### Removed
 

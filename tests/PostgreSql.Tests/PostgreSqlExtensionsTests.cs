@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
 using Xunit;
 
@@ -376,4 +377,35 @@ public class PostgreSqlExtensions_CreateColumnInfos
                 ci.Value.TableInfo.Table.Should().Be("ranks");
             });
     }
+}
+
+public class PostgreSqlExtensions_ToDatabaseValue
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "counter", false, false, typeof(ulong));
+
+    [Theory]
+    [MemberData(nameof(GetConvertedValues))]
+    [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
+    public void Converts_unsigned_integers_to_the_signed_type_of_the_column(object value, object expected)
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, value).Should().Be(expected).And.BeOfType(expected.GetType());
+
+    [Fact]
+    public void Keeps_other_values()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, "text").Should().Be("text");
+
+    [Fact]
+    public void Rejects_UInt64_above_the_bigint_range_naming_the_column()
+    {
+        var act = () => PostgreSqlExtensions.ToDatabaseValue(s_column, ulong.MaxValue);
+
+        act.Should().Throw<OverflowException>().WithMessage("*plant.line.counter*");
+    }
+
+    public static TheoryData<object, object> GetConvertedValues()
+        => new()
+        {
+            { ushort.MaxValue, (int)ushort.MaxValue },
+            { uint.MaxValue, (long)uint.MaxValue },
+            { (ulong)long.MaxValue, long.MaxValue },
+        };
 }

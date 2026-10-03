@@ -115,7 +115,7 @@ internal sealed class PostgreSqlRelationalDatabase(PostgreSqlDataPortCommunicati
                         foreach (var column in columns)
                         {
                             if (row.Columns.TryGetValue(column, out var value))
-                                await writer.WriteAsync(value, cancellationToken).ConfigureAwait(false);
+                                await writer.WriteAsync(PostgreSqlExtensions.ToDatabaseValue(column, value), cancellationToken).ConfigureAwait(false);
                             else
                                 await writer.WriteNullAsync(cancellationToken).ConfigureAwait(false);
                         }

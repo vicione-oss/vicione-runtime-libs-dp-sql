@@ -34,6 +34,17 @@ internal static class PostgreSqlExtensions
         { typeof(JsonNode), NpgsqlDbType.Json },
     };
 
+    internal static object? ToDatabaseValue(ColumnInfo column, object? value)
+        => value switch
+        {
+            ushort number => (int)number,
+            uint number => (long)number,
+            ulong number when number <= long.MaxValue => (long)number,
+            ulong number => throw new OverflowException(
+                $"Cannot write {number} to {column.TableInfo.Schema}.{column.TableInfo.Table}.{column.Name}, a bigint column holds UInt64 values up to {long.MaxValue}."),
+            _ => value,
+        };
+
     internal static bool IsSupportedType(Type type)
         => s_typeMapping.ContainsKey(type);
 

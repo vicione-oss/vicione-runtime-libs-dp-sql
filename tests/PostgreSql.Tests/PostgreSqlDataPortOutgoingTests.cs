@@ -225,6 +225,41 @@ public class PostgreSqlDataPortOutgoing_
             await connection.CloseAsync();
         }
 
+        [Theory]
+        [MemberData(nameof(GetUnsignedData))]
+        [Trait("Category", "Interoperability")]
+        [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
+        [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
+        public async Task Writes_unsigned_integers_Async(Type type, object value, object expected)
+        {
+            var tree = new SqlTreeCreator()
+                .AddDb("UnsignedDB")
+                .AddSchema("UnsignedSchema")
+                .AddTable(type.Name)
+                .AddColumn("value", type, notNull: true)
+                .Create();
+            var data = RelationalDatabaseTestHelper.CreateTestData(tree, value, type);
+            var communication = sqlServer.Communication with { Nodes = tree, };
+            using var outgoing = new PostgreSqlDataPortOutgoing(communication, Substitute.For<ILogger<PostgreSqlDataPortOutgoing>>());
+
+            await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+            await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
+            await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+            using var connection = new NpgsqlConnection(sqlServer.Communication.ToConnectionString());
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            using var command = new NpgsqlCommand(RelationalDatabaseTestHelper.ComposeSelectTableQuery('"', type.Name, "UnsignedSchema"), connection);
+            (await command.ExecuteScalarAsync(TestContext.Current.CancellationToken)).Should().Be(expected);
+        }
+
+        public static TheoryData<Type, object, object> GetUnsignedData()
+            => new()
+            {
+                { typeof(ushort), ushort.MaxValue, (int)ushort.MaxValue },
+                { typeof(uint), uint.MaxValue, (long)uint.MaxValue },
+                { typeof(ulong), (ulong)long.MaxValue, long.MaxValue },
+            };
+
         public static TheoryData<Type, object> GetData()
             => new()
             {

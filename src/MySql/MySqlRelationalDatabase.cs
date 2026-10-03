@@ -96,16 +96,16 @@ internal sealed class MySqlRelationalDatabase(MySqlDataPortCommunication communi
 
         foreach (var rowData in data.GroupBy(d => d.TableInfo))
         {
-            var coulums = GetColumns(rowData);
+            var columns = GetColumns(rowData);
 
-            command.CommandText = MySqlCommands.ComposeInsertCommand(rowData.Key, coulums);
+            command.CommandText = MySqlCommands.ComposeInsertCommand(rowData.Key, columns);
 
             foreach (var row in rowData)
             {
                 command.Parameters.Clear();
 
-                foreach (var (column, value) in row.Columns)
-                    command.Parameters.Add(new(column.Name, value));
+                foreach (var column in columns)
+                    command.Parameters.Add(new(column.Name, row.Columns.GetValueOrDefault(column) ?? DBNull.Value));
 
                 await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }

@@ -292,6 +292,32 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         rows.Select(r => r[0]).Should().Equal(1, 2);
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Writes_rows_with_different_columns_in_one_batch_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("MixedDB")
+            .AddSchema("MixedSchema")
+            .AddTable("mixed")
+            .AddColumn("a", typeof(int))
+            .AddColumn("b", typeof(string))
+            .Create();
+        var onlyA = RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int));
+        var onlyB = RelationalDatabaseTestHelper.CreateTestData(tree, "x", typeof(string));
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, [.. onlyA, .. onlyB], TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyA, TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyB, TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "MixedSchema", "mixed", TestContext.Current.CancellationToken);
+        rows.Should().BeEquivalentTo<object?[]>([[1, "x"], [1, null], [null, "x"]], o => o.WithStrictOrdering());
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

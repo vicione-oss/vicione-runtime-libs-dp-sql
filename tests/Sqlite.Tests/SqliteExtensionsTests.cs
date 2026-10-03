@@ -367,6 +367,18 @@ public class SqliteExtensions_ToDatabaseValue
     }
 
     [Fact]
+    public void Rejects_NaN_naming_the_column()
+    {
+        var act = () => SqliteExtensions.ToDatabaseValue(s_column, double.NaN);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*line.value*");
+    }
+
+    [Fact]
+    public void Keeps_infinity()
+        => SqliteExtensions.ToDatabaseValue(s_column, double.PositiveInfinity).Should().Be(double.PositiveInfinity);
+
+    [Fact]
     public void Keeps_other_strings()
         => SqliteExtensions.ToDatabaseValue(s_column, "äöü € 😀").Should().Be("äöü € 😀");
 }

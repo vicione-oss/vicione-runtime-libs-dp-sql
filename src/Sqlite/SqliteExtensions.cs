@@ -35,6 +35,10 @@ internal static class SqliteExtensions
         {
             ulong number when number > long.MaxValue => throw new OverflowException(
                 $"Cannot write {number} to {column.TableInfo.Table}.{column.Name}, an integer column holds UInt64 values up to {long.MaxValue}."),
+            double number when double.IsNaN(number) => throw new ArgumentException(
+                $"Cannot write NaN to {column.TableInfo.Table}.{column.Name}, SQLite does not store it.", nameof(value)),
+            float number when float.IsNaN(number) => throw new ArgumentException(
+                $"Cannot write NaN to {column.TableInfo.Table}.{column.Name}, SQLite does not store it.", nameof(value)),
             char character when character == '\0' => throw new ArgumentException(
                 $"Cannot write a NUL character to {column.TableInfo.Table}.{column.Name}, SQLite would store an empty string.", nameof(value)),
             string text when text.Contains('\0', StringComparison.Ordinal) => throw new ArgumentException(

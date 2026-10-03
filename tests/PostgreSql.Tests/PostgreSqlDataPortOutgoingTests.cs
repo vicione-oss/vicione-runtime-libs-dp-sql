@@ -170,7 +170,7 @@ public class PostgreSqlDataPortOutgoing_
         [Trait("Category", "Interoperability")]
         [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
         [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
-        public async Task Logs_PublishFailed_on_sending_null_to_not_null()
+        public async Task Drops_a_row_with_null_in_a_not_null_column_Async()
         {
             var tree = new SqlTreeCreator()
                 .AddDb("DataTypTestDB")
@@ -188,8 +188,8 @@ public class PostgreSqlDataPortOutgoing_
             await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
             await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
 
-            logger.LatestRecord.Message.Should().Contain("Cannot");
-            logger.LatestRecord.Id.Should().Be(new EventId(1, "LogPublishWithCompletedQueueFailed"));
+            logger.LatestRecord.Message.Should().Match("The database rejected a row for *NotNull. The row is dropped.");
+            logger.LatestRecord.Id.Should().Be(new EventId(4, "LogRowDropped"));
             logger.LatestRecord.Level.Should().Be(LogLevel.Error);
         }
 
@@ -259,6 +259,32 @@ public class PostgreSqlDataPortOutgoing_
                 { typeof(uint), uint.MaxValue, (long)uint.MaxValue },
                 { typeof(ulong), (ulong)long.MaxValue, long.MaxValue },
             };
+
+        [Fact]
+        [Trait("Category", "Interoperability")]
+        [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
+        public async Task Keeps_writing_after_a_duplicate_primary_key_Async()
+        {
+            var tree = new SqlTreeCreator()
+                .AddDb("RejectDB")
+                .AddSchema("RejectSchema")
+                .AddTable("keyed")
+                .AddColumn("id", typeof(int), primaryKey: true)
+                .Create();
+            var communication = sqlServer.Communication with { Nodes = tree, };
+            using var outgoing = new PostgreSqlDataPortOutgoing(communication, Substitute.For<ILogger<PostgreSqlDataPortOutgoing>>());
+            await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+            await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int)), TestContext.Current.CancellationToken);
+            await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int)), TestContext.Current.CancellationToken);
+            await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 2, typeof(int)), TestContext.Current.CancellationToken);
+            await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+            using var connection = new NpgsqlConnection(sqlServer.Communication.ToConnectionString());
+            await connection.OpenAsync(TestContext.Current.CancellationToken);
+            using var command = new NpgsqlCommand("SELECT count(*) FROM \"RejectSchema\".\"keyed\";", connection);
+            (await command.ExecuteScalarAsync(TestContext.Current.CancellationToken)).Should().Be(2L);
+        }
 
         public static TheoryData<Type, object> GetData()
             => new()

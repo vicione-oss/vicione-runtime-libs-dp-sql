@@ -459,6 +459,7 @@
         "type": "Project",
         "dependencies": {
           "AwesomeAssertions": "[9.6.0, )",
+          "Microsoft.Extensions.Diagnostics.Testing": "[10.10.0, )",
           "Microsoft.Testing.Extensions.CodeCoverage": "[18.11.2, )",
           "NSubstitute": "[6.2.0, )",
           "ViciOne.Suite.DataPort.RelationalDatabase": "[1.0.0, )",

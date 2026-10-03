@@ -46,6 +46,31 @@ public class SqlServerRelationalDatabase_CreateDataRowsFromTemplate
     }
 }
 
+public class SqlServerRelationalDatabase_IsRowError
+{
+    [Fact]
+    public void Rejects_an_InvalidOperationException_not_thrown_by_SqlBulkCopy()
+    {
+        var exception = Catch(() => throw new InvalidOperationException("Connection is not open.", new FormatException()));
+
+        SqlServerRelationalDatabase.IsRowError(exception).Should().BeFalse();
+    }
+
+    private static Exception Catch(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ex;
+        }
+
+        throw new InvalidOperationException("The action did not throw.");
+    }
+}
+
 public class SqlServerRelationalDatabase_OpenConnectionAsync
 {
     [Fact]

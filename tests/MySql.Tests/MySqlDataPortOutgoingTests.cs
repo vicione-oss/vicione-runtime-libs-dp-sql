@@ -187,7 +187,7 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
     [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
     [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
     [SuppressMessage("Usage", "CA2201:Keine reservierten Ausnahmetypen auslösen")]
-    public async Task Logs_PublishFailed_on_sending_null_to_not_null()
+    public async Task Drops_a_row_with_null_in_a_not_null_column_Async()
     {
         var tree = new SqlTreeCreator()
             .AddDb("DataTypTestDB")
@@ -205,8 +205,8 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
         await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
 
-        logger.LatestRecord.Message.Should().Contain("Cannot");
-        logger.LatestRecord.Id.Should().Be(new EventId(1, "LogPublishWithCompletedQueueFailed"));
+        logger.LatestRecord.Message.Should().Match("The database rejected a row for *NotNull. The row is dropped.");
+        logger.LatestRecord.Id.Should().Be(new EventId(4, "LogRowDropped"));
         logger.LatestRecord.Level.Should().Be(LogLevel.Error);
     }
 
@@ -378,6 +378,28 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
 
         await act.Should().NotThrowAsync();
         await redeployed.DisconnectAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Keeps_writing_after_a_rejected_value_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("RejectDB")
+            .AddSchema("RejectSchema")
+            .AddTable("doubles")
+            .AddColumn("value", typeof(double))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, double.NaN, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1.5, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "RejectSchema", "doubles", TestContext.Current.CancellationToken);
+        rows.Select(r => r[0]).Should().Equal(1.5);
     }
 
     [Fact]

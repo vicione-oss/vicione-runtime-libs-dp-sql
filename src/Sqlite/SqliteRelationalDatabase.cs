@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -15,7 +16,10 @@ internal sealed class SqliteRelationalDatabase(SqliteDataPortCommunication commu
     : RelationalDatabase(communication, logger, 128)
 {
     private readonly SqliteDataPortCommunication _communication = communication;
-    private readonly ILogger _logger = logger;
+    private const int SqliteTooBig = 18;
+    private const int SqliteConstraint = 19;
+    private const int SqliteMismatch = 20;
+
     private SqliteConnection? _connection;
 
     protected override async Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> _, CancellationToken cancellationToken)
@@ -59,21 +63,18 @@ internal sealed class SqliteRelationalDatabase(SqliteDataPortCommunication commu
         base.Dispose(disposing);
     }
 
-    protected override async ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
-            await PublishToSqliteAsync(_connection, data, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.PublishFailed(ex);
-            await AdoDotNetFunctions.CloseBrokenConnectionAsync(_connection).ConfigureAwait(false);
-            return false;
-        }
+    protected override DbConnection? Connection => _connection;
 
-        return true;
+    protected override bool IsRejectedByDatabase(Exception exception)
+        => IsRowError(exception);
+
+    internal static bool IsRowError(Exception exception)
+        => exception is SqliteException { SqliteErrorCode: SqliteTooBig or SqliteConstraint or SqliteMismatch };
+
+    protected override async Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
+    {
+        await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
+        await PublishToSqliteAsync(_connection, rows, cancellationToken).ConfigureAwait(false);
     }
 
     [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]

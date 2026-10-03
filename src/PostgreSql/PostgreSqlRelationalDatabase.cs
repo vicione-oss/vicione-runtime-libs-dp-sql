@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -13,7 +14,6 @@ namespace ViciOne.Suite.DataPort;
 internal sealed class PostgreSqlRelationalDatabase(PostgreSqlDataPortCommunication communication, ILogger logger) : RelationalDatabase(communication, logger, 63)
 {
     private readonly PostgreSqlDataPortCommunication _communication = communication;
-    private readonly ILogger _logger = logger;
     private NpgsqlConnection? _connection;
 
     protected override async Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken)
@@ -71,22 +71,19 @@ internal sealed class PostgreSqlRelationalDatabase(PostgreSqlDataPortCommunicati
         base.Dispose(disposing);
     }
 
-    protected override async ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
+    protected override DbConnection? Connection => _connection;
+
+    protected override bool IsRejectedByDatabase(Exception exception)
+        => IsRowError(exception);
+
+    // SQLSTATE class 22 is a data exception, class 23 an integrity constraint violation.
+    internal static bool IsRowError(Exception exception)
+        => exception is PostgresException { SqlState: ['2', '2', ..] or ['2', '3', ..] };
+
+    protected override async Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
     {
-        try
-        {
-            await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
-            await PublishToPostgreSqlAsync(_connection, data, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.PublishFailed(ex);
-            await AdoDotNetFunctions.CloseBrokenConnectionAsync(_connection).ConfigureAwait(false);
-
-            return false;
-        }
-
-        return true;
+        await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
+        await PublishToPostgreSqlAsync(_connection, rows, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task PublishToPostgreSqlAsync(NpgsqlConnection connection, IEnumerable<RowData> data, CancellationToken cancellationToken)

@@ -339,6 +339,47 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         rows.Should().BeEmpty();
     }
 
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Connects_again_to_the_tables_it_created_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("RedeployDB")
+            .AddSchema("RedeploySchema")
+            .AddTable("all_types")
+            .AddColumn("bool", typeof(bool))
+            .AddColumn("u8", typeof(byte))
+            .AddColumn("i8", typeof(sbyte))
+            .AddColumn("i16", typeof(short))
+            .AddColumn("u16", typeof(ushort))
+            .AddColumn("i32", typeof(int))
+            .AddColumn("u32", typeof(uint))
+            .AddColumn("i64", typeof(long))
+            .AddColumn("u64", typeof(ulong))
+            .AddColumn("f32", typeof(float))
+            .AddColumn("f64", typeof(double))
+            .AddColumn("dec", typeof(decimal))
+            .AddColumn("str", typeof(string))
+            .AddColumn("dt", typeof(DateTime))
+            .AddColumn("ts", typeof(TimeSpan))
+            .AddColumn("bin", typeof(byte[]))
+            .AddTable("keyed")
+            .AddColumn("id", typeof(string), primaryKey: true)
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using (var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>()))
+        {
+            await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+            await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+        }
+        using var redeployed = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        var act = () => redeployed.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().NotThrowAsync();
+        await redeployed.DisconnectAsync(TestContext.Current.CancellationToken);
+    }
+
     public static TheoryData<Type, object> GetData()
         => new()
         {

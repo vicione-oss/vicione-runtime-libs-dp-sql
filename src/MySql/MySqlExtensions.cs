@@ -37,7 +37,7 @@ internal static class MySqlExtensions
         => s_typeMapping.ContainsKey(type);
 
     internal static string ConvertType(Type type)
-        => s_typeMapping.TryGetValue(Nullable.GetUnderlyingType(type) ?? type, out var dbType) ? dbType : "Text";
+        => s_typeMapping.TryGetValue(Nullable.GetUnderlyingType(type) ?? type, out var dbType) ? dbType : "text";
 
     internal static string ConvertType(Type type, bool primaryKey)
         => primaryKey && type == typeof(string) ? StringPrimaryKeyType : ConvertType(type);

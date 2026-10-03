@@ -32,6 +32,7 @@
 - Write MySQL, MariaDB and SQLite batches whose rows carry different columns, missing columns are stored as `NULL`
 - Write `UInt16`, `UInt32` and `UInt64` columns to PostgreSQL, a `UInt64` above `Int64.MaxValue` is rejected with an error naming the column
 - Accept an existing MySQL or MariaDB database without tables instead of failing the deploy with `database exists`
+- Accept MySQL and MariaDB tables the DataPort created itself on the next deploy, `Bool`, unsigned integer and MariaDB JSON columns were reported as breaking changes
 
 ### Removed
 

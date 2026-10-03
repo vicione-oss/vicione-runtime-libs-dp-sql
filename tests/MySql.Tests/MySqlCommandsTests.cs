@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using AwesomeAssertions;
 using Xunit;
@@ -7,21 +8,31 @@ namespace ViciOne.Suite.DataPort;
 
 public class MySqlCommands_ReadSchemaInfo
 {
-    [Theory]
-    [InlineData("varchar", 255, "varchar(255)")]
-    [InlineData("text", 65535, "text")]
-    public void Reads_varchar_with_its_length(string dataType, int length, string expectedType)
+    [Fact]
+    public void Reads_the_normalized_column_type()
     {
-        using var table = CreateSchemaTable(dataType, length);
+        using var table = CreateSchemaTable("int(10) unsigned");
         using var reader = table.CreateDataReader();
         reader.Read();
 
         var schemaInfo = MySqlCommands.ReadSchemaInfo(reader);
 
-        schemaInfo.ColumnType.Should().Be(expectedType);
+        schemaInfo.ColumnType.Should().Be("int unsigned");
     }
 
-    private static DataTable CreateSchemaTable(string dataType, int length)
+    [Fact]
+    public void Reads_a_database_without_tables()
+    {
+        using var table = CreateSchemaTable(null);
+        using var reader = table.CreateDataReader();
+        reader.Read();
+
+        var schemaInfo = MySqlCommands.ReadSchemaInfo(reader);
+
+        schemaInfo.Should().Be(new SchemaInfo("schema", null, null, null, false, false, false));
+    }
+
+    private static DataTable CreateSchemaTable(string? columnType)
     {
         DataTable table = new();
         table.Columns.Add("schema", typeof(string));
@@ -31,11 +42,57 @@ public class MySqlCommands_ReadSchemaInfo
         table.Columns.Add("primary_key", typeof(bool));
         table.Columns.Add("not_null", typeof(bool));
         table.Columns.Add("auto_increment", typeof(bool));
-        table.Columns.Add("precision", typeof(byte));
-        table.Columns.Add("scale", typeof(byte));
-        table.Columns.Add("length", typeof(int));
-        table.Rows.Add("schema", "table", "id", dataType, true, true, false, null, null, length);
+
+        if (columnType is null)
+            table.Rows.Add("schema", null, null, null, false, false, false);
+        else
+            table.Rows.Add("schema", "table", "id", columnType, true, true, false);
+
         return table;
+    }
+}
+
+public class MySqlCommands_NormalizeColumnType
+{
+    [Theory]
+    [InlineData("tinyint(1)", "bool")]
+    [InlineData("tinyint(4)", "tinyint")]
+    [InlineData("tinyint(3) unsigned", "tinyint unsigned")]
+    [InlineData("smallint(5) unsigned", "smallint unsigned")]
+    [InlineData("int(11)", "int")]
+    [InlineData("int unsigned", "int unsigned")]
+    [InlineData("bigint(20) unsigned", "bigint unsigned")]
+    [InlineData("longtext", "json")]
+    [InlineData("json", "json")]
+    [InlineData("varchar(255)", "varchar(255)")]
+    [InlineData("varbinary(8000)", "varbinary(8000)")]
+    [InlineData("decimal(65,30)", "decimal(65,30)")]
+    [InlineData("TEXT", "text")]
+    public void Matches_the_type_names_columns_are_created_with(string columnType, string expected)
+        => MySqlCommands.NormalizeColumnType(columnType).Should().Be(expected);
+
+    [Theory]
+    [InlineData(typeof(bool))]
+    [InlineData(typeof(byte))]
+    [InlineData(typeof(sbyte))]
+    [InlineData(typeof(short))]
+    [InlineData(typeof(ushort))]
+    [InlineData(typeof(int))]
+    [InlineData(typeof(uint))]
+    [InlineData(typeof(long))]
+    [InlineData(typeof(ulong))]
+    [InlineData(typeof(float))]
+    [InlineData(typeof(double))]
+    [InlineData(typeof(decimal))]
+    [InlineData(typeof(string))]
+    [InlineData(typeof(byte[]))]
+    [InlineData(typeof(Guid))]
+    [InlineData(typeof(TimeSpan))]
+    public void Keeps_the_created_type_name(Type type)
+    {
+        var created = MySqlExtensions.ConvertType(type);
+
+        MySqlCommands.NormalizeColumnType(created).Should().Be(created);
     }
 }
 

@@ -2,6 +2,10 @@
 
 ## 1.0.0 - Unreleased
 
+### Added
+
+- Count rows dropped by SQL DataPorts in the `vicione.dataport.sql.rows_dropped` counter of the `ViciOne.Suite.DataPort.Sql` meter
+
 ### Changed
 
 - Add new icons to DataPorts
@@ -13,7 +17,10 @@
 - **Breaking:** Rename the connection node Ids to `SqliteInstance`, `MySqlInstance`, `MariaDbInstance`, `PostgreSqlInstance`, `SqlServerInstance` and `SqlServerSingleDatabaseInstance`, existing configurations must be recreated
 - **Breaking:** Rename the SQL Server property `UserID` to `UserId`, matching the other SQL DataPorts
 - Show boolean properties as check boxes and the unit in the timeout and publish interval names
+- Log a publish that keeps its rows queued at `Warning` and replace the provider errors `Cannot publish data to …` with an error for each dropped row
+- **Breaking:** Replace the abstract `RelationalDatabase.PublishAsync` with `PublishRowsAsync`, which throws when the database rejects the rows, and add the virtual `Connection` and `IsRejectedByDatabase` members
 - Describe the connection properties and the `BulkSize` default more precisely in the `.yaml` files
+- Describe how SQL DataPorts write rows and which value ranges each database stores in the README
 - Update `Microsoft.Data.Sqlite` to `10.0.12`
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.Tree.Builder` to `3.0.0`
@@ -28,6 +35,15 @@
 - Apply `ConnectTimeout` when testing a MariaDB connection
 - Limit PostgreSQL `ConnectTimeout` to `1024` seconds, the maximum `Npgsql` accepts
 - Create string primary keys as `varchar(255)` in MySQL and MariaDB and as `nvarchar(450)` in SQL Server, a `text` column cannot be a key
+- Reconnect SQL DataPorts after the database server closed the connection, MySQL and MariaDB stopped writing until the next redeploy
+- Write MySQL, MariaDB and SQLite batches whose rows carry different columns, missing columns are stored as `NULL`
+- Write `UInt16`, `UInt32` and `UInt64` columns to PostgreSQL, a `UInt64` above `Int64.MaxValue` is rejected with an error naming the column
+- Accept an existing MySQL or MariaDB database without tables instead of failing the deploy with `database exists`
+- Accept MySQL and MariaDB tables the DataPort created itself on the next deploy, `Bool`, unsigned integer and MariaDB JSON columns were reported as breaking changes
+- Drop a row the database rejects for its values, such as a duplicate key, an out-of-range number or `NaN` on MySQL, with an error naming the table, instead of retrying its batch until the next redeploy; rows failing for any other reason stay queued
+- Keep microseconds of `DateTime` values in new MySQL and MariaDB tables by creating `datetime(6)` columns, existing `datetime` columns are still accepted
+- Reject `UInt64` values above `Int64.MaxValue`, NUL characters and strings containing one in SQLite instead of storing them changed
+- Store `DateTime.MinValue` and `DateTime.MaxValue` as the first and last microsecond PostgreSQL holds instead of `-infinity` and `infinity`
 
 ### Removed
 

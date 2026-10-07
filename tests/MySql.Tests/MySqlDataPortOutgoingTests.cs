@@ -187,7 +187,7 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
     [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
     [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
     [SuppressMessage("Usage", "CA2201:Keine reservierten Ausnahmetypen auslösen")]
-    public async Task Logs_PublishFailed_on_sending_null_to_not_null()
+    public async Task Drops_a_row_with_null_in_a_not_null_column_Async()
     {
         var tree = new SqlTreeCreator()
             .AddDb("DataTypTestDB")
@@ -205,8 +205,8 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
         await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
 
-        logger.LatestRecord.Message.Should().Contain("Cannot");
-        logger.LatestRecord.Id.Should().Be(new EventId(1, "LogPublishWithCompletedQueueFailed"));
+        logger.LatestRecord.Message.Should().Match("The database rejected a row for *NotNull. The row is dropped.");
+        logger.LatestRecord.Id.Should().Be(new EventId(4, "LogRowDropped"));
         logger.LatestRecord.Level.Should().Be(LogLevel.Error);
     }
 
@@ -266,6 +266,162 @@ public class MySqlDataPortOutgoing_Interoperability(MySqlTestSystem mySql)
         var act = () => reconnected.ConnectAsync(TestContext.Current.CancellationToken);
 
         await act.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Writes_again_after_the_server_closed_the_connection_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ReconnectDB")
+            .AddSchema("KilledConnectionSchema")
+            .AddTable("measurements")
+            .AddColumn("value", typeof(int))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int)), TestContext.Current.CancellationToken);
+        await MySqlTestQueries.WaitForRowsAsync(communication, "KilledConnectionSchema", "measurements", 1, TestContext.Current.CancellationToken);
+        await MySqlTestQueries.KillOtherConnectionsAsync(communication, TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 2, typeof(int)), TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.WaitForRowsAsync(communication, "KilledConnectionSchema", "measurements", 2, TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+        rows.Select(r => r[0]).Should().Equal(1, 2);
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Writes_rows_with_different_columns_in_one_batch_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("MixedDB")
+            .AddSchema("MixedSchema")
+            .AddTable("mixed")
+            .AddColumn("a", typeof(int))
+            .AddColumn("b", typeof(string))
+            .Create();
+        var onlyA = RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int));
+        var onlyB = RelationalDatabaseTestHelper.CreateTestData(tree, "x", typeof(string));
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, [.. onlyA, .. onlyB], TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyA, TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyB, TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "MixedSchema", "mixed", TestContext.Current.CancellationToken);
+        rows.Should().BeEquivalentTo<object?[]>([[1, "x"], [1, null], [null, "x"]], o => o.WithStrictOrdering());
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Creates_tables_in_an_existing_database_without_tables_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("ExistingDB")
+            .AddSchema("EmptyMySqlDatabase")
+            .AddTable("measurements")
+            .AddColumn("value", typeof(int))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        await MySqlTestQueries.ExecuteAsync(communication, "CREATE DATABASE `EmptyMySqlDatabase`;", TestContext.Current.CancellationToken);
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "EmptyMySqlDatabase", "measurements", TestContext.Current.CancellationToken);
+        rows.Should().BeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Connects_again_to_the_tables_it_created_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("RedeployDB")
+            .AddSchema("RedeploySchema")
+            .AddTable("all_types")
+            .AddColumn("bool", typeof(bool))
+            .AddColumn("u8", typeof(byte))
+            .AddColumn("i8", typeof(sbyte))
+            .AddColumn("i16", typeof(short))
+            .AddColumn("u16", typeof(ushort))
+            .AddColumn("i32", typeof(int))
+            .AddColumn("u32", typeof(uint))
+            .AddColumn("i64", typeof(long))
+            .AddColumn("u64", typeof(ulong))
+            .AddColumn("f32", typeof(float))
+            .AddColumn("f64", typeof(double))
+            .AddColumn("dec", typeof(decimal))
+            .AddColumn("str", typeof(string))
+            .AddColumn("dt", typeof(DateTime))
+            .AddColumn("ts", typeof(TimeSpan))
+            .AddColumn("bin", typeof(byte[]))
+            .AddTable("keyed")
+            .AddColumn("id", typeof(string), primaryKey: true)
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using (var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>()))
+        {
+            await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+            await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+        }
+        using var redeployed = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+
+        var act = () => redeployed.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await act.Should().NotThrowAsync();
+        await redeployed.DisconnectAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Keeps_writing_after_a_rejected_value_Async()
+    {
+        var tree = new SqlTreeCreator()
+            .AddDb("RejectDB")
+            .AddSchema("RejectSchema")
+            .AddTable("doubles")
+            .AddColumn("value", typeof(double))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, double.NaN, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1.5, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "RejectSchema", "doubles", TestContext.Current.CancellationToken);
+        rows.Select(r => r[0]).Should().Equal(1.5);
+    }
+
+    [Fact]
+    [Trait("Category", "Interoperability")]
+    public async Task Keeps_the_microseconds_of_a_DateTime_Async()
+    {
+        var value = new DateTime(2026, 10, 3, 6, 0, 0, DateTimeKind.Utc).AddTicks(1_234_560);
+        var tree = new SqlTreeCreator()
+            .AddDb("DateTimeDB")
+            .AddSchema("DateTimeSchema")
+            .AddTable("times")
+            .AddColumn("value", typeof(DateTime))
+            .Create();
+        var communication = mySql.Communication with { Nodes = tree, };
+        using var outgoing = new MySqlDataPortOutgoing(communication, Substitute.For<ILogger<MySqlDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, value, typeof(DateTime)), TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await MySqlTestQueries.SelectAllAsync(communication, "DateTimeSchema", "times", TestContext.Current.CancellationToken);
+        rows.Should().ContainSingle().Which[0].Should().BeOfType<DateTime>().Which.Ticks.Should().Be(value.Ticks);
     }
 
     public static TheoryData<Type, object> GetData()

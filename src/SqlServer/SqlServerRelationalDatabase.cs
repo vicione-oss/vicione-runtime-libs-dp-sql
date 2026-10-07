@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -96,20 +97,21 @@ internal abstract class SqlServerRelationalDatabase(SqlServerDataPortCommunicati
 
     protected DataTable GetDataTable(TableInfo tableInfo) => _tables[tableInfo];
 
-    protected sealed override async ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
-            await PublishToSqlServerAsync(_connection, data, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.PublishFailed(ex);
-            return false;
-        }
+    protected sealed override DbConnection? Connection => _connection;
 
-        return true;
+    protected sealed override bool IsRejectedByDatabase(Exception exception)
+        => IsRowError(exception);
+
+    // SqlBulkCopy checks every value on the client before it is sent and throws an InvalidOperationException from
+    // ConvertValue for NULL in a NOT NULL column and for a value the column type cannot hold.
+    internal static bool IsRowError(Exception exception)
+        => exception is SqlException { Number: 220 or 242 or 245 or 515 or 547 or 2601 or 2627 or 2628 or 8114 or 8115 or 8152 }
+            || (exception is InvalidOperationException { TargetSite: { Name: "ConvertValue" } method } && method.DeclaringType == typeof(SqlBulkCopy));
+
+    protected sealed override async Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
+    {
+        await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
+        await PublishToSqlServerAsync(_connection, rows, cancellationToken).ConfigureAwait(false);
     }
 
     protected abstract Task PublishToSqlServerAsync(SqlConnection connection, IEnumerable<RowData> data, CancellationToken cancellationToken);

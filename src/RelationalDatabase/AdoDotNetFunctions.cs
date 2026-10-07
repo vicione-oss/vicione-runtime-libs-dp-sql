@@ -15,8 +15,28 @@ public static class AdoDotNetFunctions
     {
         if (connection is null)
             throw new InvalidOperationException("Command must have an connection.");
-        if (connection.State == ConnectionState.Closed)
-            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        if (connection.State == ConnectionState.Open)
+            return;
+
+        if (connection.State != ConnectionState.Closed)
+            await connection.CloseAsync().ConfigureAwait(false);
+
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public static async Task CloseBrokenConnectionAsync(DbConnection? connection)
+    {
+        if (connection is null || connection.State == ConnectionState.Closed)
+            return;
+
+        try
+        {
+            await connection.CloseAsync().ConfigureAwait(false);
+        }
+        catch (DbException)
+        {
+            // The connection is unusable either way; the next EnsureConnectionAsync opens it again.
+        }
     }
 
     public static async Task<IReadOnlyCollection<DataRow>> ExecuteReaderAsync(DbCommand command, CancellationToken cancellationToken)

@@ -34,6 +34,24 @@ internal static class PostgreSqlExtensions
         { typeof(JsonNode), NpgsqlDbType.Json },
     };
 
+    // PostgreSQL stores microseconds, and Npgsql writes DateTime.MinValue and DateTime.MaxValue as -infinity and infinity.
+    // The nearest microseconds a timestamp can hold are written instead.
+    private static readonly DateTime s_minTimestamp = DateTime.MinValue.AddTicks(TimeSpan.TicksPerMicrosecond);
+    private static readonly DateTime s_maxTimestamp = DateTime.MaxValue.AddTicks(-(DateTime.MaxValue.Ticks % TimeSpan.TicksPerMicrosecond));
+
+    internal static object? ToDatabaseValue(ColumnInfo column, object? value)
+        => value switch
+        {
+            DateTime dateTime when dateTime < s_minTimestamp => DateTime.SpecifyKind(s_minTimestamp, dateTime.Kind),
+            DateTime dateTime when dateTime > s_maxTimestamp => DateTime.SpecifyKind(s_maxTimestamp, dateTime.Kind),
+            ushort number => (int)number,
+            uint number => (long)number,
+            ulong number when number <= long.MaxValue => (long)number,
+            ulong number => throw new OverflowException(
+                $"Cannot write {number} to {column.TableInfo.Schema}.{column.TableInfo.Table}.{column.Name}, a bigint column holds UInt64 values up to {long.MaxValue}."),
+            _ => value,
+        };
+
     internal static bool IsSupportedType(Type type)
         => s_typeMapping.ContainsKey(type);
 

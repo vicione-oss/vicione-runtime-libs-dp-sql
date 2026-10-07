@@ -333,3 +333,52 @@ public class SqliteExtensions_CreateColumnInfos
             });
     }
 }
+
+public class SqliteExtensions_ToDatabaseValue
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "value", false, false, typeof(object));
+
+    [Fact]
+    public void Keeps_a_UInt64_within_the_integer_range()
+        => SqliteExtensions.ToDatabaseValue(s_column, (ulong)long.MaxValue).Should().Be((ulong)long.MaxValue);
+
+    [Fact]
+    public void Rejects_a_UInt64_above_the_integer_range_naming_the_column()
+    {
+        var act = () => SqliteExtensions.ToDatabaseValue(s_column, ulong.MaxValue);
+
+        act.Should().Throw<OverflowException>().WithMessage("*line.value*");
+    }
+
+    [Fact]
+    public void Rejects_a_string_containing_a_NUL_character_naming_the_column()
+    {
+        var act = () => SqliteExtensions.ToDatabaseValue(s_column, "line1\0end");
+
+        act.Should().Throw<ArgumentException>().WithMessage("*line.value*");
+    }
+
+    [Fact]
+    public void Rejects_a_NUL_character_naming_the_column()
+    {
+        var act = () => SqliteExtensions.ToDatabaseValue(s_column, '\0');
+
+        act.Should().Throw<ArgumentException>().WithMessage("*line.value*");
+    }
+
+    [Fact]
+    public void Rejects_NaN_naming_the_column()
+    {
+        var act = () => SqliteExtensions.ToDatabaseValue(s_column, double.NaN);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*line.value*");
+    }
+
+    [Fact]
+    public void Keeps_infinity()
+        => SqliteExtensions.ToDatabaseValue(s_column, double.PositiveInfinity).Should().Be(double.PositiveInfinity);
+
+    [Fact]
+    public void Keeps_other_strings()
+        => SqliteExtensions.ToDatabaseValue(s_column, "äöü € 😀").Should().Be("äöü € 😀");
+}

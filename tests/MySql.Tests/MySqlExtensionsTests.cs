@@ -421,3 +421,31 @@ public class MySqlExtensions_CreateColumnInfos
             });
     }
 }
+
+public class MySqlExtensions_ToDatabaseValue
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "value", false, false, typeof(double));
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Rejects_a_double_that_is_not_finite_naming_the_column(double value)
+    {
+        var act = () => MySqlExtensions.ToDatabaseValue(s_column, value);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*plant.line.value*");
+    }
+
+    [Fact]
+    public void Rejects_a_float_that_is_not_finite()
+    {
+        var act = () => MySqlExtensions.ToDatabaseValue(s_column, float.NaN);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Keeps_finite_numbers()
+        => MySqlExtensions.ToDatabaseValue(s_column, 1.5).Should().Be(1.5);
+}

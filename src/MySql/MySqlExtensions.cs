@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
 
@@ -22,7 +23,7 @@ internal static class MySqlExtensions
         { typeof(float), "float" },
         { typeof(double), "double" },
         { typeof(decimal), "decimal(65,30)" },
-        { typeof(DateTime), "datetime" },
+        { typeof(DateTime), "datetime(6)" },
         { typeof(TimeSpan), "time" },
         { typeof(Guid), "varchar(36)"},
         { typeof(byte), "tinyint unsigned" },
@@ -33,11 +34,20 @@ internal static class MySqlExtensions
         { typeof(JsonNode), "json" },
     };
 
+    // MySqlConnector writes NaN and Infinity as bare words, which the server reads as unknown column names.
+    internal static object? ToDatabaseValue(ColumnInfo column, object? value)
+        => value switch
+        {
+            double or float when !double.IsFinite(Convert.ToDouble(value, CultureInfo.InvariantCulture)) => throw new ArgumentException(
+                $"Cannot write {value} to {column.TableInfo.Schema}.{column.TableInfo.Table}.{column.Name}, MySQL and MariaDB store only finite numbers.", nameof(value)),
+            _ => value,
+        };
+
     internal static bool IsSupportedType(Type type)
         => s_typeMapping.ContainsKey(type);
 
     internal static string ConvertType(Type type)
-        => s_typeMapping.TryGetValue(Nullable.GetUnderlyingType(type) ?? type, out var dbType) ? dbType : "Text";
+        => s_typeMapping.TryGetValue(Nullable.GetUnderlyingType(type) ?? type, out var dbType) ? dbType : "text";
 
     internal static string ConvertType(Type type, bool primaryKey)
         => primaryKey && type == typeof(string) ? StringPrimaryKeyType : ConvertType(type);

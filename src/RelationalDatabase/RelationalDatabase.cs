@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using ViciOne.DataPort.Communication;
 using ViciOne.ManagedEngine.ExternalCommunication;
 
 namespace ViciOne.Suite.DataPort;
@@ -14,12 +18,18 @@ public abstract class RelationalDatabase : IDisposable
 {
     private const int QueueSize = 100_000;
 
+    internal const string MeterName = "ViciOne.Suite.DataPort.Sql";
+    internal const string RowsDroppedInstrumentName = "vicione.dataport.sql.rows_dropped";
+
     private readonly RelationalDatabaseCommunication _dataPortCommunication;
     private readonly ILogger _logger;
     private Dictionary<string, ColumnInfo> _channelColumnInfo = [];
     private readonly Dictionary<string, INode[]> _routes;
     private readonly Dictionary<string, Guid> _channelColumnNodes;
     private readonly ManagedQueuePipeline<RowData>? _queue;
+    private readonly HashSet<RowData> _handledRows = new(ReferenceEqualityComparer.Instance);
+    private readonly Meter _meter = new(MeterName);
+    private readonly Counter<long> _rowsDropped;
 
     protected RelationalDatabase(RelationalDatabaseCommunication dataPortCommunication, ILogger logger, int maxIdentifierLength = int.MaxValue)
     {
@@ -35,6 +45,7 @@ public abstract class RelationalDatabase : IDisposable
         _routes = routes.ToDictionary(r => r.AffectedChannel, r => r.Route);
         _dataPortCommunication = dataPortCommunication;
         _logger = logger;
+        _rowsDropped = _meter.CreateCounter<long>(RowsDroppedInstrumentName, "{row}", "Rows the database rejected and the DataPort dropped.");
         _queue ??= new ManagedQueuePipeline<RowData>(
             QueueSize,
             string.Empty,
@@ -83,6 +94,8 @@ public abstract class RelationalDatabase : IDisposable
         if (_queue is not null)
             await _queue.Complete();
 
+        _handledRows.Clear();
+
         await CloseConnectionAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -103,6 +116,96 @@ public abstract class RelationalDatabase : IDisposable
         foreach (var row in PrepareRowData(values, _channelColumnInfo, _routes))
             _queue?.Append(row);
     }
+
+    internal async ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
+    {
+        List<RowData> rows = [.. data.Where(row => !_handledRows.Remove(row))];
+
+        if (rows.Count == 0)
+            return true;
+
+        try
+        {
+            await PublishRowsAsync(rows, cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception ex) when (IsRowRejected(ex))
+        {
+            _logger.LogBatchRejected(rows.Count, ex);
+        }
+        catch (Exception ex)
+        {
+            return await RetryLaterAsync(ex).ConfigureAwait(false);
+        }
+
+        return await IsolateRejectedRowsAsync(rows, cancellationToken).ConfigureAwait(false);
+    }
+
+    // Halving the batch finds a few rejected rows in a few round trips instead of one per row. If the database
+    // becomes unreachable on the way, the queue retries the whole batch; the rows written or dropped until then
+    // are remembered so that the retry skips them instead of writing them twice.
+    private async ValueTask<bool> IsolateRejectedRowsAsync(List<RowData> rows, CancellationToken cancellationToken)
+    {
+        Stack<ArraySegment<RowData>> pending = new();
+        List<RowData> handled = [];
+        PushHalves(pending, rows.ToArray());
+
+        while (pending.TryPop(out var segment))
+        {
+            try
+            {
+                await PublishRowsAsync(segment, cancellationToken).ConfigureAwait(false);
+                handled.AddRange(segment);
+            }
+            catch (Exception ex) when (IsRowRejected(ex))
+            {
+                if (segment.Count > 1)
+                {
+                    PushHalves(pending, segment);
+                    continue;
+                }
+
+                DropRow(segment[0], ex);
+                handled.Add(segment[0]);
+            }
+            catch (Exception ex)
+            {
+                _handledRows.UnionWith(handled);
+                return await RetryLaterAsync(ex).ConfigureAwait(false);
+            }
+        }
+
+        return true;
+    }
+
+    private static void PushHalves(Stack<ArraySegment<RowData>> pending, ArraySegment<RowData> rows)
+    {
+        var half = rows.Count / 2;
+        pending.Push(rows[half..]);
+        pending.Push(rows[..half]);
+    }
+
+    private void DropRow(RowData row, Exception exception)
+    {
+        _logger.LogRowDropped(row.TableInfo.Schema, row.TableInfo.Table, exception);
+        _rowsDropped.Add(1, new TagList
+        {
+            { "db.collection.name", $"{row.TableInfo.Schema}.{row.TableInfo.Table}" },
+        });
+    }
+
+    private async ValueTask<bool> RetryLaterAsync(Exception exception)
+    {
+        _logger.LogPublishDeferred(exception);
+        await AdoDotNetFunctions.CloseBrokenConnectionAsync(Connection).ConfigureAwait(false);
+        return false;
+    }
+
+    // Only an error caused by the values of a row drops rows. Everything else - a lost connection, a timeout,
+    // a lock, a missing table or permission - keeps the rows queued until the database accepts them again.
+    private bool IsRowRejected(Exception exception)
+        => exception is ArgumentException or OverflowException or InvalidCastException or FormatException
+            || IsRejectedByDatabase(exception);
 
     internal static IEnumerable<RowData> PrepareRowData(IReadOnlyCollection<ExternalValue> values, Dictionary<string, ColumnInfo> channelColumns, Dictionary<string, INode[]> routes)
     {
@@ -156,7 +259,10 @@ public abstract class RelationalDatabase : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
+        {
             _queue?.Dispose();
+            _meter.Dispose();
+        }
     }
 
     public void Dispose()
@@ -167,7 +273,11 @@ public abstract class RelationalDatabase : IDisposable
 
     protected abstract Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken);
     protected abstract Task CloseConnectionAsync(CancellationToken cancellationToken);
-    protected abstract ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken);
+    protected virtual DbConnection? Connection => null;
+
+    protected virtual bool IsRejectedByDatabase(Exception exception) => false;
+
+    protected abstract Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken);
     protected abstract Task<IReadOnlyCollection<Database>> GetExistingStructureAsync(CancellationToken cancellationToken);
     protected abstract IReadOnlyCollection<Database> GetExpectedStructure(IReadOnlyCollection<INode> nodes);
     protected abstract Task CreateMissingStructureAsync(IReadOnlyCollection<Database> missingTables, IReadOnlyCollection<Database> missingDatabases,

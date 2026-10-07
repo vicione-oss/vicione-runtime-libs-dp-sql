@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AwesomeAssertions;
 using Xunit;
 
@@ -375,5 +376,59 @@ public class PostgreSqlExtensions_CreateColumnInfos
                 ci.Value.TableInfo.Schema.Should().Be("public");
                 ci.Value.TableInfo.Table.Should().Be("ranks");
             });
+    }
+}
+
+public class PostgreSqlExtensions_ToDatabaseValue
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "counter", false, false, typeof(ulong));
+
+    [Theory]
+    [MemberData(nameof(GetConvertedValues))]
+    [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
+    public void Converts_unsigned_integers_to_the_signed_type_of_the_column(object value, object expected)
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, value).Should().Be(expected).And.BeOfType(expected.GetType());
+
+    [Fact]
+    public void Keeps_other_values()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, "text").Should().Be("text");
+
+    [Fact]
+    public void Rejects_UInt64_above_the_bigint_range_naming_the_column()
+    {
+        var act = () => PostgreSqlExtensions.ToDatabaseValue(s_column, ulong.MaxValue);
+
+        act.Should().Throw<OverflowException>().WithMessage("*plant.line.counter*");
+    }
+
+    public static TheoryData<object, object> GetConvertedValues()
+        => new()
+        {
+            { ushort.MaxValue, (int)ushort.MaxValue },
+            { uint.MaxValue, (long)uint.MaxValue },
+            { (ulong)long.MaxValue, long.MaxValue },
+        };
+}
+
+public class PostgreSqlExtensions_ToDatabaseValue_DateTime
+{
+    private static readonly ColumnInfo s_column = new(new("default", "plant", "line"), "time", false, false, typeof(DateTime));
+
+    [Fact]
+    public void Clamps_the_maximum_DateTime_to_the_last_microsecond()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc)).Should()
+            .BeOfType<DateTime>().Which.Should().Be(new DateTime(9999, 12, 31, 23, 59, 59, 999, 999, DateTimeKind.Utc)).And.BeIn(DateTimeKind.Utc);
+
+    [Fact]
+    public void Clamps_the_minimum_DateTime_to_the_first_microsecond()
+        => PostgreSqlExtensions.ToDatabaseValue(s_column, default(DateTime)).Should()
+            .BeOfType<DateTime>().Which.Should().Be(new DateTime(1, 1, 1, 0, 0, 0, 0, 1));
+
+    [Fact]
+    public void Keeps_a_DateTime_within_the_timestamp_range()
+    {
+        var value = new DateTime(2026, 10, 3, 6, 0, 0, DateTimeKind.Utc).AddTicks(1_234_567);
+
+        PostgreSqlExtensions.ToDatabaseValue(s_column, value).Should().Be(value);
     }
 }

@@ -194,7 +194,7 @@ public class SqlServerDataPortOutgoing_
         [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
         [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
         [SuppressMessage("Usage", "CA2201:Keine reservierten Ausnahmetypen auslösen")]
-        public async Task Logs_PublishFailed_on_sending_null_to_not_null()
+        public async Task Drops_a_row_with_null_in_a_not_null_column_Async()
         {
             var tree = new SqlTreeCreator()
                 .AddDb("DataTypTestDB")
@@ -212,8 +212,8 @@ public class SqlServerDataPortOutgoing_
             await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
             await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
 
-            logger.LatestRecord.Message.Should().Contain("Cannot");
-            logger.LatestRecord.Id.Should().Be(new EventId(1, "LogPublishWithCompletedQueueFailed"));
+            logger.LatestRecord.Message.Should().Match("The database rejected a row for *NotNull. The row is dropped.");
+            logger.LatestRecord.Id.Should().Be(new EventId(4, "LogRowDropped"));
             logger.LatestRecord.Level.Should().Be(LogLevel.Error);
         }
 

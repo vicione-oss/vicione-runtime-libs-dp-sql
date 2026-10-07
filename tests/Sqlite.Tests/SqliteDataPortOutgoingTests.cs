@@ -189,9 +189,35 @@ public class SqliteDataPortOutgoing_
     }
 
     [Fact]
+    public async Task Writes_rows_with_different_columns_in_one_batch_Async()
+    {
+        var filename = $"{nameof(Writes_rows_with_different_columns_in_one_batch_Async)}.db";
+        File.Delete(filename);
+        var tree = new SqlTreeCreator()
+            .AddDb("MixedDB")
+            .AddSchema("MixedSchema")
+            .AddTable("mixed")
+            .AddColumn("a", typeof(int))
+            .AddColumn("b", typeof(string))
+            .Create();
+        var onlyA = RelationalDatabaseTestHelper.CreateTestData(tree, 1, typeof(int));
+        var onlyB = RelationalDatabaseTestHelper.CreateTestData(tree, "x", typeof(string));
+        using var outgoing = new SqliteDataPortOutgoing(new() { Filename = filename, Nodes = tree }, Substitute.For<ILogger<SqliteDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, [.. onlyA, .. onlyB], TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyA, TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, onlyB, TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await SqliteTestQueries.SelectAllAsync(filename, "mixed", TestContext.Current.CancellationToken);
+        rows.Should().BeEquivalentTo<object?[]>([[1L, "x"], [1L, null], [null, "x"]], o => o.WithStrictOrdering());
+    }
+
+    [Fact]
     [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
     [SuppressMessage("Usage", "xUnit1045:Avoid using TheoryData type arguments that might not be serializable", Justification = "Nicht möglich")]
-    public async Task Logs_PublishFailed_on_sending_null_to_not_null()
+    public async Task Drops_a_row_with_null_in_a_not_null_column_Async()
     {
         var filename = $"{nameof(Can_handle_different_data_types)}_notnull.db";
 
@@ -212,9 +238,31 @@ public class SqliteDataPortOutgoing_
         await outgoing.SendAsync(0, data, TestContext.Current.CancellationToken);
         await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
 
-        logger.LatestRecord.Message.Should().Contain("Cannot");
-        logger.LatestRecord.Id.Should().Be(new EventId(1, "LogPublishWithCompletedQueueFailed"));
+        logger.LatestRecord.Message.Should().Match("The database rejected a row for *NotNull. The row is dropped.");
+        logger.LatestRecord.Id.Should().Be(new EventId(4, "LogRowDropped"));
         logger.LatestRecord.Level.Should().Be(LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task Keeps_writing_after_a_rejected_value_Async()
+    {
+        var filename = $"{nameof(Keeps_writing_after_a_rejected_value_Async)}.db";
+        File.Delete(filename);
+        var tree = new SqlTreeCreator()
+            .AddDb("RejectDB")
+            .AddSchema("RejectSchema")
+            .AddTable("doubles")
+            .AddColumn("value", typeof(double))
+            .Create();
+        using var outgoing = new SqliteDataPortOutgoing(new() { Filename = filename, Nodes = tree }, Substitute.For<ILogger<SqliteDataPortOutgoing>>());
+        await outgoing.ConnectAsync(TestContext.Current.CancellationToken);
+
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, double.NaN, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.SendAsync(0, RelationalDatabaseTestHelper.CreateTestData(tree, 1.5, typeof(double)), TestContext.Current.CancellationToken);
+        await outgoing.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        var rows = await SqliteTestQueries.SelectAllAsync(filename, "doubles", TestContext.Current.CancellationToken);
+        rows.Select(r => r[0]).Should().Equal(1.5);
     }
 
     public static TheoryData<Type, object, object> GetData()

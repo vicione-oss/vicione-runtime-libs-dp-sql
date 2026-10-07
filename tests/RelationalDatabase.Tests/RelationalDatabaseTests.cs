@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using NSubstitute;
 using ViciOne.ManagedEngine.ExternalCommunication;
 using Xunit;
@@ -51,10 +55,156 @@ public class RelationalDatabase_
             });
     }
 
+    [Fact]
+    public async Task Drops_a_row_the_database_rejects_and_writes_the_others_Async()
+    {
+        FakeLogger logger = new();
+        using MetricCollector<long> droppedRows = new(null, RelationalDatabase.MeterName, RelationalDatabase.RowsDroppedInstrumentName);
+        List<object?> written = [];
+        using TestDatabase database = new(logger, rows => rows.Any(r => Equals(Name(r), "rejected"))
+            ? throw new RejectedRowException()
+            : Task.CompletedTask);
+        database.ValuesPublished += rows => written.AddRange(rows.Select(Name));
+
+        await database.ConnectAsync(TestContext.Current.CancellationToken);
+        database.Send([new() { Channel = "name", Value = "first" }]);
+        database.Send([new() { Channel = "name", Value = "rejected" }]);
+        database.Send([new() { Channel = "name", Value = "last" }]);
+        await database.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        written.Should().Equal("first", "last");
+        logger.Collector.GetSnapshot().Should().ContainSingle(e => e.Level == LogLevel.Error).Which.Message
+            .Should().Be("The database rejected a row for default.default. The row is dropped.");
+        droppedRows.GetMeasurementSnapshot().EvaluateAsCounter().Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Publishes_a_batch_again_after_a_transient_failure_Async()
+    {
+        FakeLogger logger = new();
+        var failures = 1;
+        TaskCompletionSource<IEnumerable<RowData>> published = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        var transient = Substitute.For<DbException>();
+        transient.IsTransient.Returns(true);
+        using TestDatabase database = new(logger, rows => failures-- > 0 ? throw transient : Task.CompletedTask);
+        database.ValuesPublished += rows => published.TrySetResult(rows);
+
+        await database.ConnectAsync(TestContext.Current.CancellationToken);
+        database.Send([new() { Channel = "name", Value = "kept" }]);
+        var rows = await published.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await database.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        rows.Select(Name).Should().Equal("kept");
+        logger.Collector.GetSnapshot().Should().Contain(e => e.Message == "The database did not accept the values. They stay queued and are published again.")
+            .And.NotContain(e => e.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task Closes_and_retries_when_the_connection_broke_during_the_publish_Async()
+    {
+        var failures = 1;
+        TaskCompletionSource published = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var connection = Substitute.For<DbConnection>();
+        connection.State.Returns(ConnectionState.Broken);
+        using TestDatabase database = new(publish: _ => failures-- > 0 ? throw new InvalidOperationException("Connection is not open.") : Task.CompletedTask)
+        {
+            TestConnection = connection,
+        };
+        database.ValuesPublished += _ => published.TrySetResult();
+
+        await database.ConnectAsync(TestContext.Current.CancellationToken);
+        database.Send([new() { Channel = "name", Value = "kept" }]);
+        await published.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await database.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        await connection.Received().CloseAsync();
+    }
+
+    [Fact]
+    public async Task Keeps_the_rows_when_the_database_fails_for_another_reason_Async()
+    {
+        FakeLogger logger = new();
+        var failures = 1;
+        TaskCompletionSource<IEnumerable<RowData>> published = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using TestDatabase database = new(logger, rows => failures-- > 0 ? throw new InvalidOperationException("Table 'default' doesn't exist") : Task.CompletedTask);
+        database.ValuesPublished += rows => published.TrySetResult(rows);
+
+        await database.ConnectAsync(TestContext.Current.CancellationToken);
+        database.Send([new() { Channel = "name", Value = "kept" }]);
+        var rows = await published.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await database.DisconnectAsync(TestContext.Current.CancellationToken);
+
+        rows.Select(Name).Should().Equal("kept");
+        logger.Collector.GetSnapshot().Should().NotContain(e => e.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task Finds_rejected_rows_without_publishing_each_row_on_its_own_Async()
+    {
+        var rows = CreateRows(64);
+        List<object?> written = [];
+        var calls = 0;
+        using TestDatabase database = new(publish: batch =>
+        {
+            calls++;
+            return batch.Any(r => Equals(Name(r), "row 17")) ? throw new RejectedRowException() : Task.CompletedTask;
+        });
+        database.ValuesPublished += batch => written.AddRange(batch.Select(Name));
+
+        var published = await database.PublishAsync(rows, TestContext.Current.CancellationToken);
+
+        published.Should().BeTrue();
+        written.Should().Equal(rows.Select(Name).Where(n => !Equals(n, "row 17")));
+        calls.Should().Be(13);
+    }
+
+    [Fact]
+    public async Task Does_not_write_a_row_twice_when_the_database_fails_while_rejected_rows_are_isolated_Async()
+    {
+        FakeLogger logger = new();
+        using MetricCollector<long> droppedRows = new(null, RelationalDatabase.MeterName, RelationalDatabase.RowsDroppedInstrumentName);
+        var rows = CreateRows(8);
+        List<object?> written = [];
+        var unreachable = true;
+        using TestDatabase database = new(logger, batch =>
+        {
+            if (batch.Any(r => Equals(Name(r), "row 5")))
+                throw new RejectedRowException();
+            if (unreachable && batch.Any(r => Equals(Name(r), "row 6")))
+            {
+                unreachable = false;
+                throw new InvalidOperationException("Connection is not open.");
+            }
+
+            return Task.CompletedTask;
+        });
+        database.ValuesPublished += batch => written.AddRange(batch.Select(Name));
+
+        var firstAttempt = await database.PublishAsync(rows, TestContext.Current.CancellationToken);
+        var retry = await database.PublishAsync(rows, TestContext.Current.CancellationToken);
+
+        firstAttempt.Should().BeFalse();
+        retry.Should().BeTrue();
+        written.Should().BeEquivalentTo(rows.Select(Name).Where(n => !Equals(n, "row 5")));
+        logger.Collector.GetSnapshot().Where(e => e.Level == LogLevel.Error).Should().ContainSingle();
+        droppedRows.GetMeasurementSnapshot().EvaluateAsCounter().Should().Be(1);
+    }
+
+    private static List<RowData> CreateRows(int count)
+    {
+        TableInfo table = new("default", "default", "default");
+        ColumnInfo name = new(table, "name", false, false, typeof(string));
+        return [.. Enumerable.Range(0, count).Select(i => new RowData(table, new() { [name] = $"row {i}" }))];
+    }
+
+    private static object? Name(RowData row)
+        => row.Columns.Single(c => c.Key.Name == "name").Value;
+
     internal sealed record TestCommunication : RelationalDatabaseCommunication
     { }
 
-    internal sealed class TestDatabase : RelationalDatabase
+    internal sealed class TestDatabase(ILogger? logger = null, Func<IReadOnlyCollection<RowData>, Task>? publish = null)
+        : RelationalDatabase(CreateCommunication(), logger ?? Substitute.For<ILogger>())
     {
         private static readonly Node s_idNode = new()
         {
@@ -91,8 +241,9 @@ public class RelationalDatabase_
 
         public event Action<IEnumerable<RowData>>? ValuesPublished;
 
-        public TestDatabase() : base(CreateCommunication(), Substitute.For<ILogger>())
-        { }
+        public DbConnection? TestConnection { get; init; }
+
+        protected override DbConnection? Connection => TestConnection;
 
         private static TestCommunication CreateCommunication()
             => new()
@@ -141,15 +292,31 @@ public class RelationalDatabase_
                 { s_propsNode.Id, new ColumnInfo(new ("default", "default", "default"), "props", true, false, typeof(string)) },
             };
 
-        protected override ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
+        protected override async Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
         {
-            ValuesPublished?.Invoke(data);
-            return ValueTask.FromResult(true);
+            if (publish is not null)
+                await publish(rows);
+
+            ValuesPublished?.Invoke(rows);
         }
+
+        protected override bool IsRejectedByDatabase(Exception exception) => exception is RejectedRowException;
 
         protected override Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken) => Task.CompletedTask;
         protected override Task CloseConnectionAsync(CancellationToken cancellationToken) => Task.CompletedTask;
         protected override Task CreateMissingStructureAsync(IReadOnlyCollection<Database> missingTables, IReadOnlyCollection<Database> missingDatabases, IReadOnlyCollection<Database> missingSchemas, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+
+    internal sealed class RejectedRowException : Exception
+    {
+        public RejectedRowException()
+        { }
+
+        public RejectedRowException(string message) : base(message)
+        { }
+
+        public RejectedRowException(string message, Exception innerException) : base(message, innerException)
+        { }
     }
 }
 
@@ -449,8 +616,8 @@ public class DisableStructureValidation_
                 { s_columnNode.Id, new ColumnInfo(new("default", "default", "default"), "ID", false, false, typeof(int)) },
             };
 
-        protected override ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
-            => ValueTask.FromResult(true);
+        protected override Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
+            => Task.CompletedTask;
 
         protected override Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken) => Task.CompletedTask;
         protected override Task CloseConnectionAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -518,8 +685,8 @@ public class DisableStructureValidation_
                 { s_node.Id, new ColumnInfo(new("default", "default", "default"), "ID", false, false, typeof(int)) },
             };
 
-        protected override ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
-            => ValueTask.FromResult(true);
+        protected override Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
+            => Task.CompletedTask;
 
         protected override Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken) => Task.CompletedTask;
         protected override Task CloseConnectionAsync(CancellationToken cancellationToken) => Task.CompletedTask;

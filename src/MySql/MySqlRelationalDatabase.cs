@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -14,7 +15,6 @@ namespace ViciOne.Suite.DataPort;
 internal sealed class MySqlRelationalDatabase(MySqlDataPortCommunication communication, ILogger logger) : RelationalDatabase(communication, logger, 64)
 {
     private readonly MySqlDataPortCommunication _communication = communication;
-    private readonly ILogger _logger = logger;
     private MySqlConnection? _connection;
 
     protected override async Task OpenConnectionAsync(IReadOnlyCollection<ColumnInfo> columnInfos, CancellationToken cancellationToken)
@@ -69,20 +69,27 @@ internal sealed class MySqlRelationalDatabase(MySqlDataPortCommunication communi
         base.Dispose(disposing);
     }
 
-    protected override async ValueTask<bool> PublishAsync(IEnumerable<RowData> data, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
-            await PublishToMySqlAsync(_connection, data, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.PublishFailed(ex);
-            return false;
-        }
+    protected override DbConnection? Connection => _connection;
 
-        return true;
+    protected override bool IsRejectedByDatabase(Exception exception)
+        => IsRowError(exception);
+
+    internal static bool IsRowError(Exception exception)
+        => exception is MySqlException
+        {
+            ErrorCode: MySqlErrorCode.DuplicateKeyEntry
+                or MySqlErrorCode.ColumnCannotBeNull
+                or MySqlErrorCode.WarningDataOutOfRange
+                or MySqlErrorCode.DataTooLong
+                or MySqlErrorCode.TruncatedWrongValue
+                or MySqlErrorCode.TruncatedWrongValueForField
+                or MySqlErrorCode.NoReferencedRow2,
+        };
+
+    protected override async Task PublishRowsAsync(IReadOnlyCollection<RowData> rows, CancellationToken cancellationToken)
+    {
+        await AdoDotNetFunctions.EnsureConnectionAsync(_connection, cancellationToken).ConfigureAwait(false);
+        await PublishToMySqlAsync(_connection, rows, cancellationToken).ConfigureAwait(false);
     }
 
     [SuppressMessage("Security", "CA2100:SQL-Abfragen auf Sicherheitsrisiken überprüfen")]
@@ -95,16 +102,16 @@ internal sealed class MySqlRelationalDatabase(MySqlDataPortCommunication communi
 
         foreach (var rowData in data.GroupBy(d => d.TableInfo))
         {
-            var coulums = GetColumns(rowData);
+            var columns = GetColumns(rowData);
 
-            command.CommandText = MySqlCommands.ComposeInsertCommand(rowData.Key, coulums);
+            command.CommandText = MySqlCommands.ComposeInsertCommand(rowData.Key, columns);
 
             foreach (var row in rowData)
             {
                 command.Parameters.Clear();
 
-                foreach (var (column, value) in row.Columns)
-                    command.Parameters.Add(new(column.Name, value));
+                foreach (var column in columns)
+                    command.Parameters.Add(new(column.Name, MySqlExtensions.ToDatabaseValue(column, row.Columns.GetValueOrDefault(column)) ?? DBNull.Value));
 
                 await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }

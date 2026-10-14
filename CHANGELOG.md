@@ -25,6 +25,7 @@
 - Update `SQLitePCLRaw.lib.e_sqlite3` to `3.53.3`
 - Update `ViciOne.Tree.Builder` to `3.0.0`
 - Update `Microsoft.Data.SqlClient` to `7.1.0`
+- Update `System.Security.Cryptography.Pkcs` to `9.0.21` to fix two denial of service vulnerabilities in the SQL Server DataPort
 - Update `MySqlConnector` to `2.6.2`
 - Update `Npgsql` to `10.0.3`
 - Update `ViciOne.Suite.DataPort` to `1.0.0`

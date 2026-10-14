@@ -14,6 +14,7 @@
     <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
     <PackageVersion Include="Testcontainers.MariaDb" Version="4.15.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.15.0" />
     <PackageVersion Include="Testcontainers.MySql" Version="4.15.0" />
